@@ -47,17 +47,17 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 
 		float sandHeight = 60;
 
-        float ratio = (float)InfiniteLandscape.m_landScapeSize / (float)InfiniteTerrain.m_heightMapSize;
+
+		float ratio = (float)InfiniteLandscape.m_landScapeSize / (float)InfiniteTerrain.m_heightMapSize;
 
         for (int x = h0; x < h1; x++)
         {
-
+			float worldPosX = (x + globalTileX * (InfiniteTerrain.m_alphaMapSize - 1)) * ratio;
 			for (int z = 0; z < InfiniteTerrain.m_alphaMapSize; z++)
 			{
-				float worldPosX = (x + globalTileX * (InfiniteTerrain.m_heightMapSize - 1)) * ratio;
-				float worldPosZ = (z + globalTileZ * (InfiniteTerrain.m_heightMapSize - 1)) * ratio;
-
 				
+				float worldPosZ = (z + globalTileZ * (InfiniteTerrain.m_alphaMapSize - 1)) * ratio;
+
 				float normX = x * 1.0f / (InfiniteTerrain.m_alphaMapSize - 1);
 				float normZ = z * 1.0f / (InfiniteTerrain.m_alphaMapSize - 1);
 
@@ -78,10 +78,10 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 
 
 				//float detailNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 2, 200, 1.0f);
-				float detailNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 5, 300, 3.0f) + 2.2f - (height/100.0f);
+				float detailNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 5, 100, 3.0f) + 2.2f - (height/100.0f);
 
 
-				float totalAmount = 1.0f;
+				float amountLeft = 1.0f;
 
 				if (height > snowHeight)
 				{
@@ -102,49 +102,53 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 						slideValue =  Mathf.Max(slideValue, (slideValue * 3 * ( 1 - slopeValue)));
 
 						InfiniteTerrain.m_alphaMap[z, x, 0] = slideValue;
-						totalAmount = 1 - slideValue;
+						amountLeft = 1 - slideValue;
 					}
 					else
 					{
 						// no snow below tundra
 						InfiniteTerrain.m_alphaMap[z, x, 0] = 0;
-
-
-		//----- Set the Detail Objects, grass here:------------
-
-						if (detailNoise > 0.0f)
-						{
-							//float rnd = Random.value;
-							//if (rnd < 0.5f)
-								InfiniteTerrain.detailMap0[z, x] = 20;
-							//else if (rnd < 0.66f)
-							//	InfiniteTerrain.detailMap1[z, x] = 1;
-							//else if (rnd < 0.86f)
-							//	InfiniteTerrain.detailMap2[z, x] = 1;
-							//else if (rnd < 0.96f)
-							//	InfiniteTerrain.detailMap3[z, x] = 1;
-						}
-		//------------------------------------------------------
 					}
-
 
 					float textureNoise = detailNoise;//m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 2, 1000, 1.0f);
 
+					// big pattern for
+					//float textureNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 5, 3000, 3.0f);
 
-					if (slopeValue > 0.4f)
+
+					if (slopeValue > 0.55f)
 					{						
-						// All Rock
-						InfiniteTerrain.m_alphaMap[z, x, 1] = totalAmount;
-					}
-					else if (slopeValue > 0.2f || true)
-					{
-						// Should alternate
-
-						//var percent = map(slopeValue, 0.2f, 0.4f, 0, 1);
 						
-						InfiniteTerrain.m_alphaMap[z, x, 2] = totalAmount * (1- textureNoise);
-						InfiniteTerrain.m_alphaMap[z, x, 3] = totalAmount * (textureNoise);
+						// All left from snow is rock
+						InfiniteTerrain.m_alphaMap[z, x, 1] = amountLeft;
 					}
+					else
+					{
+						var percent = map(slopeValue, 0.3f, 0.4f, 0, 1);
+						
+						//Blend rock
+						InfiniteTerrain.m_alphaMap[z, x, 1] = percent;
+
+						amountLeft  -= percent;
+
+						// for rest, alternate moss and grass with noise pattern
+						//InfiniteTerrain.m_alphaMap[z, x, 2] = amountLeft * (1- textureNoise);
+						//var grassValue = amountLeft * textureNoise;
+
+						if(textureNoise > 0.5f)
+							InfiniteTerrain.m_alphaMap[z, x, 3] = amountLeft;
+						else
+							InfiniteTerrain.m_alphaMap[z, x, 2] = amountLeft;
+
+						//TEST, just green 
+						//var grassValue = amountLeft; // * textureNoise;
+						//InfiniteTerrain.m_alphaMap[z, x, 3] = grassValue;
+						
+
+						//if (grassValue > 0.7f)
+						//	InfiniteTerrain.detailMap0[z, x] = 10;
+					}
+					/*
 					else
 					{
 					
@@ -158,7 +162,7 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 						//InfiniteTerrain.m_alphaMap[z, x, 1] = totalAmount * percent;
 						//InfiniteTerrain.m_alphaMap[z, x, 3] = 1 - (totalAmount * percent);
 					}
-					
+					*/
 				}
 			}
 		}
@@ -235,8 +239,8 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
                     //InfiniteTerrain.m_alphaMap[z, x, 2] = height / 500;
                     //InfiniteTerrain.m_alphaMap[z, x, 3] = 1;
                 }
-            }
+		    }	
         }
-        */
+		*/
     }
 }

@@ -3,7 +3,7 @@ using System.Collections;
 
 public class InfiniteLandscape : MonoBehaviour
 {
-	public static int RandomSeed = 40; // lowland and easy hills 38; //ver good, varied landmasses: 37;// mountains, some lakes: 35;//small islands 29; // lots of plains, mounntains in distance: 28;// bumpy mountains: 27;// good:26;
+	public static int RandomSeed = 26; // lowland and easy hills 38; //ver good, varied landmasses: 37;// mountains, some lakes: 35;//small islands 29; // lots of plains, mounntains in distance: 28;// bumpy mountains: 27;// good:26;
 
 	public GameObject PlayerObject;
 

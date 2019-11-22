@@ -95,17 +95,12 @@ public class TerrainPatch : IPatch
 				float worldPosX = (x + globalTileX * (InfiniteTerrain.m_heightMapSize - 1)) * ratio;
 				float sum = 0;
 
-
-
 				if (hillsExist)
 				{
 					//float hills = m_mountainNoise.FractalNoise2D(worldPosX, worldPosZ, 1, 100, 0.02f) + 0.01f; // good small bumpy thing
-
 					// makes "brain" bumps, that look odd from top   
 					//float hills = -(m_mountainNoiseRidged.FractalNoise2D(worldPosX, worldPosZ, 1, 100, 0.01f)) + 0.005f; // flipped small ridge
-
 					float hills = -(m_mountainNoiseRidged.FractalNoise2D(worldPosX, worldPosZ, 6, 250, 0.015f)); // flipped small ridge
-
 					//hills = 0.2f; // for testing falloff map ignore noise
 					hills = BlendLandmass(hills, x, z, key, 1);
 					sum += hills;
@@ -115,7 +110,6 @@ public class TerrainPatch : IPatch
 				if (mountainsExist)
 				{
 					float mountainsPerlin = m_mountainNoise.FractalNoise2D(worldPosX, worldPosZ, 4, 3000, 0.4f);
-
 					//mountainsPerlin = 0.2f; // for testing falloff map ignore noise
 					mountainsPerlin = BlendLandmass(mountainsPerlin, x, z, key, 2);
 					sum += mountainsPerlin;
@@ -125,13 +119,10 @@ public class TerrainPatch : IPatch
 				{
 					float mountainsRidged = m_mountainNoiseRidged.FractalNoise2D(worldPosX, worldPosZ, 4, 3000, 0.2f);
 					//mountainsRidged = 0.2f; // for testing falloff map ignore noise
-
-					float accentHills = m_mountainNoise.FractalNoise2D(worldPosX, worldPosZ, 1, 100, 0.005f) + 0.01f; // good small bumpy thing
-																													  //accentHills = 0f; // for testing falloff map ignore noise
+					float accentHills = m_mountainNoise.FractalNoise2D(worldPosX, worldPosZ, 1, 100, 0.005f); // good small bumpy thing
+					//accentHills = 0f; // for testing falloff map ignore noise
 					mountainsRidged += accentHills;
-
 					mountainsRidged = BlendLandmass(mountainsRidged, x, z, key, 4);
-
 					sum += mountainsRidged;
 
 				}
@@ -139,14 +130,18 @@ public class TerrainPatch : IPatch
 				if (plainsExist)
 				{
 					float plains = m_mountainNoise.FractalNoise2D(worldPosX, worldPosZ, 4, 9000, 0.1f) + 0.05f; //
-
 					//plains = 0.2f; // for testing falloff map ignore noise
 					plains = BlendLandmass(plains, x, z, key, 8);
 					sum += plains;
 				}
 
+				// for debugging textures, create flat surfacce
+				//sum = 0.04f;
+
 				float height = (sum) + 0.003f * hx;
 				InfiniteTerrain.m_terrainHeights[z, x] = height;
+
+				
 
 			}
 		}

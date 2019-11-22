@@ -48,8 +48,8 @@ public class InfiniteTerrain : InfiniteLandscape
     //Splat
     public const int numOfSplatPrototypes = 4;
     //Original
-    //public const int m_alphaMapSize = (InfiniteTerrain.m_heightMapSize - 1) / 2;  
-    public const int m_alphaMapSize = (InfiniteTerrain.m_heightMapSize - 1) *2; // gives more details but is slower
+    public const int m_alphaMapSize = (InfiniteTerrain.m_heightMapSize - 1) / 2;  
+    //public const int m_alphaMapSize = (InfiniteTerrain.m_heightMapSize - 1) *2; // gives more details but is slower
     public static float[, ,] m_alphaMap = new float[m_alphaMapSize, m_alphaMapSize, numOfSplatPrototypes];
     public Texture2D[] splat = new Texture2D[numOfSplatPrototypes];
 
