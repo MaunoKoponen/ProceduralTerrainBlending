@@ -4,8 +4,12 @@ using System.Collections.Generic;
 
 public class InfiniteTerrain : InfiniteLandscape
 {
-    // Holds the name of the terrain tile and the randomly generated number, that determines the combination of land mass types 
+	// Holds the name of the terrain tile and the randomly generated number, that determines the combination of land mass types 
 	// used to calculate the height if the terrain at each coordinate 
+
+	public bool useTestMaterial;
+	public Material testMaterial;
+	
 	public static Dictionary<string, int> LandmassDict = new Dictionary<string, int>();
 
     // 2-dimensional table for holding values that form a round sine bell shape 
@@ -45,15 +49,20 @@ public class InfiniteTerrain : InfiniteLandscape
     public float m_treeCrossFadeLength = 50.0f;     //As trees turn to billboards there transform is rotated to match the meshes, a higher number will make this transition smoother
     public int m_treeMaximumFullLODCount = 400;     //The maximum number of trees that will be drawn in a certain area. 
 
-    //Splat
-    public const int numOfSplatPrototypes = 4;
-    //Original
-    public const int m_alphaMapSize = (InfiniteTerrain.m_heightMapSize - 1) / 2;  
+	//Splat
+	public const int numOfSplatPrototypes = 5;
+	//Original
+	public const int m_alphaMapSize = (InfiniteTerrain.m_heightMapSize - 1) / 2;  
     //public const int m_alphaMapSize = (InfiniteTerrain.m_heightMapSize - 1) *2; // gives more details but is slower
     public static float[, ,] m_alphaMap = new float[m_alphaMapSize, m_alphaMapSize, numOfSplatPrototypes];
     public Texture2D[] splat = new Texture2D[numOfSplatPrototypes];
 
-    private SplatPrototype[] m_splatPrototypes = new SplatPrototype[numOfSplatPrototypes];
+	public Texture2D[] splatNormals = new Texture2D[numOfSplatPrototypes];
+
+	public Color[] splatSpecular = new Color[numOfSplatPrototypes];
+
+
+	private SplatPrototype[] m_splatPrototypes = new SplatPrototype[numOfSplatPrototypes];
     //Details
 
     public const int m_detailMapSize = m_alphaMapSize;                 //Resolutions of detail (Grass) layers SHOULD BE EQUAL TO SPLAT RES
@@ -61,11 +70,13 @@ public class InfiniteTerrain : InfiniteLandscape
     public static int[,] detailMap1 = new int[m_detailMapSize, m_detailMapSize];
     public static int[,] detailMap2 = new int[m_detailMapSize, m_detailMapSize];
     public static int[,] detailMap3 = new int[m_detailMapSize, m_detailMapSize];
+
+	//These are private, because changing these without too much thought will introduce artifacts in density/placement
+	private int m_detailObjectDistance = 1000;//500;                                //The distance at which details will no longer be drawn
+	private float m_detailObjectDensity = 0.5f;                             //Creates more dense details within patch
+    private int m_detailResolutionPerPatch = 16;                             //The size of detail patch. A higher number may reduce draw calls as details will be batch in larger patches
     
-    public int m_detailObjectDistance = 500;                                //The distance at which details will no longer be drawn
-    public float m_detailObjectDensity = 40.0f;                             //Creates more dense details within patch
-    public int m_detailResolutionPerPatch = 32;                             //The size of detail patch. A higher number may reduce draw calls as details will be batch in larger patches
-    public float m_wavingGrassStrength = 0.4f;
+	public float m_wavingGrassStrength = 0.4f;
     public float m_wavingGrassAmount =  0.2f;
     public float m_wavingGrassSpeed = 0.4f;
     public Color m_wavingGrassTint = Color.white;
@@ -78,8 +89,21 @@ public class InfiniteTerrain : InfiniteLandscape
     public float Tile2 = 300;
     public float Tile3 = 5;
 
-    void Awake()
+	public float Tile4 = 20;
+
+
+
+	public CastleCreator castleCreator;
+
+	public bool createCastle;
+
+	public AnimationCurve TestCurve;
+	public static AnimationCurve StaticTestCurve;
+
+
+	void Awake()
     {
+		StaticTestCurve = TestCurve;
 		Texture2D falloff = new Texture2D(513,513);
        	fallOffTable = GenerateFalloffTable();
 
@@ -112,19 +136,19 @@ public class InfiniteTerrain : InfiniteLandscape
 
         LandmassDict.Add("9002_9003", 1);
         LandmassDict.Add("9003_9003", 1);
-        LandmassDict.Add("9004_9003", 2);
+        LandmassDict.Add("9004_9003", 1);
         LandmassDict.Add("9005_9003", 3);
         LandmassDict.Add("9006_9003", 3);
 
         LandmassDict.Add("9002_9004", 4);
-        LandmassDict.Add("9003_9004", 4);
-        LandmassDict.Add("9004_9004", 5); // center
-        LandmassDict.Add("9005_9004", 6);
+        LandmassDict.Add("9003_9004", 1);
+        LandmassDict.Add("9004_9004", 9); // center
+        LandmassDict.Add("9005_9004", 1);
         LandmassDict.Add("9006_9004", 6);
 
         LandmassDict.Add("9002_9005", 7);
         LandmassDict.Add("9003_9005", 7);
-        LandmassDict.Add("9004_9005", 8);
+        LandmassDict.Add("9004_9005", 1);
         LandmassDict.Add("9005_9005", 9);
         LandmassDict.Add("9006_9005", 9);
 
@@ -197,14 +221,21 @@ public class InfiniteTerrain : InfiniteLandscape
 		trees[5] = m_treeProtoTypes[5].prefab as GameObject;
 
 
-		Vector2[] splatTileSize = new Vector2[4] { new Vector2(Tile0, Tile0), new Vector2(Tile1, Tile1), new Vector2(Tile2, Tile2), new Vector2(Tile3, Tile3) };
+		Vector2[] splatTileSize = new Vector2[5] { new Vector2(Tile0, Tile0), new Vector2(Tile1, Tile1), new Vector2(Tile2, Tile2), new Vector2(Tile3, Tile3), new Vector2(Tile4, Tile4) };
         for (int i = 0; i < numOfSplatPrototypes; i++)
             m_splatPrototypes[i] = new SplatPrototype();
+
 
         for (int i = 0; i < numOfSplatPrototypes; i++)
         {
             m_splatPrototypes[i].texture = splat[i];
-            m_splatPrototypes[i].tileOffset = Vector2.zero;
+			
+			m_splatPrototypes[i].normalMap = splatNormals[i];
+
+			m_splatPrototypes[i].specular = splatSpecular[i];
+
+
+			m_splatPrototypes[i].tileOffset = Vector2.zero;
             m_splatPrototypes[i].tileSize = splatTileSize[i];
             m_splatPrototypes[i].texture.Apply(true);
         }
@@ -212,30 +243,30 @@ public class InfiniteTerrain : InfiniteLandscape
         for (int i = 0; i < numOfDetailPrototypes; i++)
         {
 
-            /*
-            if(i==0 || i== 1) // overriding first grass with detail mesh
+            
+            if(i == 2) // overriding third detail with mesh
             {
                 m_detailProtoTypes[i] = new DetailPrototype();
                 m_detailProtoTypes[i].usePrototypeMesh = true;
 
-                m_detailProtoTypes[i].prototype = detailMesh[i];
+                m_detailProtoTypes[i].prototype = detailMesh[0];
                 m_detailProtoTypes[i].renderMode = DetailRenderMode.VertexLit;
 
-                m_detailProtoTypes[i].minHeight = 1;
-                m_detailProtoTypes[i].minWidth = 1;
+                m_detailProtoTypes[i].minHeight = 0.5f;
+                m_detailProtoTypes[i].minWidth = 0.5f;
 
 
-                m_detailProtoTypes[i].maxHeight = 2;
-                m_detailProtoTypes[i].maxWidth = 2;
+                m_detailProtoTypes[i].maxHeight = 1;
+                m_detailProtoTypes[i].maxWidth = 1;
 
                 //m_detailProtoTypes[i].noiseSpread = ???
 
-                m_detailProtoTypes[i].healthyColor = m_grassHealthyColor;
-                m_detailProtoTypes[i].dryColor = m_grassDryColor;
+                m_detailProtoTypes[i].healthyColor = Color.white;
+                m_detailProtoTypes[i].dryColor = Color.white;
                 
             }
             else
-            */
+            
             {
                 
                 m_detailProtoTypes[i] = new DetailPrototype();
@@ -259,6 +290,7 @@ public class InfiniteTerrain : InfiniteLandscape
             {
                 TerrainData terrainData = new TerrainData();
 
+
                 terrainData.wavingGrassStrength = m_wavingGrassStrength;
                 terrainData.wavingGrassAmount = m_wavingGrassAmount;
                 terrainData.wavingGrassSpeed = m_wavingGrassSpeed;
@@ -275,7 +307,13 @@ public class InfiniteTerrain : InfiniteLandscape
                 terrainData.detailPrototypes = m_detailProtoTypes;
 
                 m_terrainGrid[i, j] = Terrain.CreateTerrainGameObject(terrainData).GetComponent<Terrain>();
-            }
+
+				if (useTestMaterial)
+				{
+					m_terrainGrid[i, j].materialType = Terrain.MaterialType.Custom;
+					m_terrainGrid[i, j].materialTemplate = testMaterial;
+				}
+			}
         }
 
         for (int i = 0; i < dim; i++)
@@ -324,7 +362,12 @@ public class InfiniteTerrain : InfiniteLandscape
 
         m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].GetComponent<Collider>().enabled = false;
         m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].GetComponent<Collider>().enabled = true;
-    }
+
+
+		// Test: createCastle()
+		if(createCastle)
+			castleCreator.CreateCastle(1500, 1500);
+	}
 
     void UpdateTerrainNeighbors()
     {
@@ -457,6 +500,9 @@ public class InfiniteTerrain : InfiniteLandscape
             }
         }
         PatchManager.MakePatches();
+		// Test: createCastle()
+		
+
 	}
 
     IEnumerator CountdownForPatch()

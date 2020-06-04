@@ -3,13 +3,15 @@ using System.Collections;
 
 public class SplatDetailPatch : IPatch  //To save some calls I have merged the splat & details patches
 {
-    private Terrain terrain;
+    private float biggestStoneNoise = 0f;
+	
+	private Terrain terrain;
 	private PatchManager.TerrainInfo m_info;
 	
 	private int globalTileX, globalTileZ, h0, h1;
 
     private NoiseModule m_detailNoise = new PerlinNoise(InfiniteLandscape.RandomSeed);
-    private NoiseModule m_SplatNoise = new PerlinNoise(InfiniteLandscape.RandomSeed);
+    //private NoiseModule m_SplatNoise = new PerlinNoise(InfiniteLandscape.RandomSeed);
 
     public SplatDetailPatch(int globTileX_i, int globTileZ_i, Terrain terrain_i, int h0_i, int h1_i, PatchManager.TerrainInfo info )
     {
@@ -75,9 +77,11 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 				InfiniteTerrain.m_alphaMap[z, x, 1] = 0;
 				InfiniteTerrain.m_alphaMap[z, x, 2] = 0;
 				InfiniteTerrain.m_alphaMap[z, x, 3] = 0;
+				InfiniteTerrain.m_alphaMap[z, x, 4] = 0;
 
 
-				//float detailNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 2, 200, 1.0f);
+
+				// The height manipulation leads to green grass to be prominent in sealeve, yellow grass in highlands
 				float detailNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 5, 100, 3.0f) + 2.2f - (height/100.0f);
 
 
@@ -89,7 +93,15 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 					InfiniteTerrain.m_alphaMap[z, x, 1] = 0;
 					InfiniteTerrain.m_alphaMap[z, x, 2] = 0;
 					InfiniteTerrain.m_alphaMap[z, x, 3] = 0;
-					
+					InfiniteTerrain.m_alphaMap[z, x, 4] = 0;
+				}
+				else if ( height < 51) // test
+				{
+					InfiniteTerrain.m_alphaMap[z, x, 0] = 0;
+					InfiniteTerrain.m_alphaMap[z, x, 1] = 0;
+					InfiniteTerrain.m_alphaMap[z, x, 2] = 0;
+					InfiniteTerrain.m_alphaMap[z, x, 3] = 0;
+					InfiniteTerrain.m_alphaMap[z, x, 4] = 1;
 				}
 				else
 				{
@@ -110,10 +122,11 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 						InfiniteTerrain.m_alphaMap[z, x, 0] = 0;
 					}
 
-					float textureNoise = detailNoise;//m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 2, 1000, 1.0f);
+					float textureNoise = detailNoise;
 
-					// big pattern for
+					// big pattern
 					//float textureNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 5, 3000, 3.0f);
+					float clumpNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 5, 30, 3.0f);
 
 
 					if (slopeValue > 0.55f)
@@ -133,20 +146,39 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 
 						// for rest, alternate moss and grass with noise pattern
 						//InfiniteTerrain.m_alphaMap[z, x, 2] = amountLeft * (1- textureNoise);
-						//var grassValue = amountLeft * textureNoise;
+						var grassValue = amountLeft * textureNoise;
 
 						if(textureNoise > 0.5f)
 							InfiniteTerrain.m_alphaMap[z, x, 3] = amountLeft;
 						else
 							InfiniteTerrain.m_alphaMap[z, x, 2] = amountLeft;
 
-						//TEST, just green 
-						//var grassValue = amountLeft; // * textureNoise;
-						//InfiniteTerrain.m_alphaMap[z, x, 3] = grassValue;
-						
 
-						//if (grassValue > 0.7f)
-						//	InfiniteTerrain.detailMap0[z, x] = 10;
+						if (grassValue > 0.7f && amountLeft > 0 && height < tundraHeight && detailNoise > 0.7f && height > InfiniteLandscape.waterHeight + 3f)
+						{
+							if(clumpNoise>0.5f)
+								InfiniteTerrain.detailMap0[z, x] = 100; // OK density
+																	// Dist 300, density 0.5, res/patch 16
+						}
+						else if( amountLeft > 0 && height < tundraHeight && height > InfiniteLandscape.waterHeight +3f)
+						{
+
+							if (clumpNoise < 0.5f)
+							InfiniteTerrain.detailMap1[z, x] = 20; // test value
+						}
+
+						//float stoneNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 5, 100, 3.0f) + 2.2f - (height / 100.0f); uniformly dropped
+						float stoneNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 2, 100, 3.0f) + 2.2f - (height / 100.0f);
+						float beachStoneNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 2, 100, 3.0f);
+
+						// stones  here and there
+						if(stoneNoise > 0.7f  && stoneNoise < 0.72f && height < tundraHeight && slopeValue < 0.3f )
+							InfiniteTerrain.detailMap2[z, x] = 5;
+
+						// near waterline stones
+						if (beachStoneNoise > 0.7f  && height > 50 && height < 60  && slopeValue < 0.1f)
+							InfiniteTerrain.detailMap2[z, x] = 5;
+
 					}
 					/*
 					else

@@ -70,7 +70,6 @@ public class TreePatch : IPatch
 			float ht = terrain.terrainData.GetInterpolatedHeight(x, y);
 			float forestHt = terrain.terrainData.GetInterpolatedHeight(forestX, forestY);
 
-
 			if (ht > testHeight * 1.1f && ht < pineHeight && angle < 20  && ! m_info.HasHills)
 			{
 				treeInstances[k].position = new Vector3(x, ht / InfiniteTerrain.m_terrainHeight, y);
@@ -82,22 +81,11 @@ public class TreePatch : IPatch
 			}
 			else
 			{
-				if (ht > InfiniteTerrain.waterHeight * 1.1f)
+				if (ht > InfiniteTerrain.waterHeight + 1.1f)
 				{
 					float noise = 1;  //m_treeNoise.FractalNoise2D(x, y, 2, 100, 0.4f); //= 1; 
-					if (ht < bushHeight)
-					{
-						if (noise > 0)
-						{
-							treeInstances[k].position = new Vector3(x, ht / InfiniteTerrain.m_terrainHeight, y);
-							treeInstances[k].prototypeIndex = 0;
-							treeInstances[k].widthScale = Random.Range(8f, 9f);
-							treeInstances[k].heightScale = Random.Range(8f, 9f);
-							treeInstances[k].color = Color.white;
-							treeInstances[k].lightmapColor = Color.white;
-						}
-					}
-					else if (forestHt > bushHeight && forestHt < pineHeight && forestAngle < 20)
+					
+					if (forestHt > bushHeight && forestHt < pineHeight && forestAngle < 20)
 					{
 						noise = m_treeNoise.FractalNoise2D(forestX, forestY, 2, 100, 0.4f); 
 						if (noise > 0)
@@ -118,6 +106,7 @@ public class TreePatch : IPatch
 							treeInstances[k].prototypeIndex = Random.Range(4, 6) ;
 							treeInstances[k].widthScale = Random.Range(2f, 2.5f);
 							treeInstances[k].heightScale = Random.Range(2f, 2.5f);
+
 							treeInstances[k].color = Color.white;
 							treeInstances[k].lightmapColor = Color.white;
 						}
@@ -128,6 +117,19 @@ public class TreePatch : IPatch
 					treeInstances[k].widthScale = 0;
 					treeInstances[k].heightScale = 0;
 				}
+				/*
+				{
+					treeInstances[k].position = new Vector3(x, ht / InfiniteTerrain.m_terrainHeight, y);
+					treeInstances[k].prototypeIndex = 0;
+					treeInstances[k].widthScale = Random.Range(8f, 9f);
+					treeInstances[k].heightScale = Random.Range(8f, 9f);
+					treeInstances[k].color = Color.white;
+					treeInstances[k].lightmapColor = Color.white;
+				}
+				*/
+				/*
+				
+			*/
 			}
 		}
 	}

@@ -3,12 +3,12 @@ using System.Collections;
 
 public class InfiniteLandscape : MonoBehaviour
 {
-	public static int RandomSeed = 26; // lowland and easy hills 38; //ver good, varied landmasses: 37;// mountains, some lakes: 35;//small islands 29; // lots of plains, mounntains in distance: 28;// bumpy mountains: 27;// good:26;
+	public static int RandomSeed = 26;//38;//35;//37;//26; // mountains 53; // lowland and easy hills 38; //ver good, varied landmasses: 37;// mountains, some lakes: 35;//small islands 29; // lots of plains, mounntains in distance: 28;// bumpy mountains: 27;// good:26;
 
 	public GameObject PlayerObject;
 
     public static float waterHeight = 50;
-
+ 
     public static float m_landScapeSize = 3072;
 
     protected const int dim = 3;
