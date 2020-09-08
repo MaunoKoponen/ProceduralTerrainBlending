@@ -20,7 +20,10 @@ public class TreePatch : IPatch
     
     public void ExecutePatch()
     {
-        FillTreePatch();
+		if (!InfiniteTerrain.RenderTreesStatic)
+			return;
+
+		FillTreePatch();
         if (h1 == InfiniteTerrain.numOfTreesPerTerrain)
         {
             terrain.terrainData.treeInstances = treeInstances;
@@ -29,27 +32,23 @@ public class TreePatch : IPatch
 
     private void FillTreePatch()
     {
+		
+		if(! InfiniteTerrain.RenderTreesStatic)
+			return; 
 		treeInstances = new TreeInstance[InfiniteTerrain.numOfTreesPerTerrain];
+		
 		float bushHeight = 55;
 		float testHeight = 100;
 		float pineHeight = 200;
 		float noTreeHeight = 350;
 
-		// TODO: use terrain type information (via m_info) to decide what kingd of forestation is needed:
-
+		// TODO: use terrain type information (via m_info) to decide what kind of forestation is needed:
 		// "savannah " trees in random position, spread evenly
-		// temperate medow/forest - trees form forests, meadows between them
+		// temperate meadow/forest - trees form forests, meadows between them
 		// " bumpy " areas - rather small bushes than trees
 		// low land, small bushes, weed
 		// mangrove - big trees near and in water, even if steep angle near water 
 		// boreal - tundra Pine forests and open lands, trees get smaller ad rare when going up the hill, bare coasts 
-
-
-		//for (int k = 0; k < InfiniteTerrain.numOfTreesPerTerrain; k++)
-
-		//int testAmount = 1000;
-
-		// test accessing landmassype in patch
 
 		float ForestCenterX = Random.Range(0.5f,0.6f);
 		float ForestCenterY = Random.Range(0.5f, 0.6f);
@@ -61,7 +60,6 @@ public class TreePatch : IPatch
 
 			float forestX = ForestCenterX + Random.Range(0.0f, 0.4f);
 			float forestY = ForestCenterY + Random.Range(0.0f, 0.4f);
-
 
 			float angle = terrain.terrainData.GetSteepness(x, y);
 			float forestAngle = terrain.terrainData.GetSteepness(forestX, forestY);
@@ -117,19 +115,6 @@ public class TreePatch : IPatch
 					treeInstances[k].widthScale = 0;
 					treeInstances[k].heightScale = 0;
 				}
-				/*
-				{
-					treeInstances[k].position = new Vector3(x, ht / InfiniteTerrain.m_terrainHeight, y);
-					treeInstances[k].prototypeIndex = 0;
-					treeInstances[k].widthScale = Random.Range(8f, 9f);
-					treeInstances[k].heightScale = Random.Range(8f, 9f);
-					treeInstances[k].color = Color.white;
-					treeInstances[k].lightmapColor = Color.white;
-				}
-				*/
-				/*
-				
-			*/
 			}
 		}
 	}

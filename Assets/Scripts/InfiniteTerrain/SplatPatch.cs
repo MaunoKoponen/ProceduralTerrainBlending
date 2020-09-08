@@ -39,16 +39,12 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
     }
 
 
-
     private void FillSplatDetailPatch()
     {
-
 		float snowHeight = 500;
 		float tundraHeight = 300;
 		float highlandsHeight = 100;
-
 		float sandHeight = 60;
-
 
 		float ratio = (float)InfiniteLandscape.m_landScapeSize / (float)InfiniteTerrain.m_heightMapSize;
 
@@ -56,8 +52,7 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
         {
 			float worldPosX = (x + globalTileX * (InfiniteTerrain.m_alphaMapSize - 1)) * ratio;
 			for (int z = 0; z < InfiniteTerrain.m_alphaMapSize; z++)
-			{
-				
+			{	
 				float worldPosZ = (z + globalTileZ * (InfiniteTerrain.m_alphaMapSize - 1)) * ratio;
 
 				float normX = x * 1.0f / (InfiniteTerrain.m_alphaMapSize - 1);
@@ -72,18 +67,14 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 				InfiniteTerrain.detailMap2[z, x] = 0;
 				InfiniteTerrain.detailMap3[z, x] = 0;
 
-
 				InfiniteTerrain.m_alphaMap[z, x, 0] = 0; //  remove reseting once logic is ready
 				InfiniteTerrain.m_alphaMap[z, x, 1] = 0;
 				InfiniteTerrain.m_alphaMap[z, x, 2] = 0;
 				InfiniteTerrain.m_alphaMap[z, x, 3] = 0;
 				InfiniteTerrain.m_alphaMap[z, x, 4] = 0;
 
-
-
 				// The height manipulation leads to green grass to be prominent in sealeve, yellow grass in highlands
 				float detailNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 5, 100, 3.0f) + 2.2f - (height/100.0f);
-
 
 				float amountLeft = 1.0f;
 
@@ -95,7 +86,8 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 					InfiniteTerrain.m_alphaMap[z, x, 3] = 0;
 					InfiniteTerrain.m_alphaMap[z, x, 4] = 0;
 				}
-				else if ( height < 51) // test
+				/*
+				else if ( height < 51) // test for beach sand
 				{
 					InfiniteTerrain.m_alphaMap[z, x, 0] = 0;
 					InfiniteTerrain.m_alphaMap[z, x, 1] = 0;
@@ -103,6 +95,7 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 					InfiniteTerrain.m_alphaMap[z, x, 3] = 0;
 					InfiniteTerrain.m_alphaMap[z, x, 4] = 1;
 				}
+				*/
 				else
 				{
 					if (height > tundraHeight)
@@ -128,10 +121,8 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 					//float textureNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 5, 3000, 3.0f);
 					float clumpNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 5, 30, 3.0f);
 
-
 					if (slopeValue > 0.55f)
 					{						
-						
 						// All left from snow is rock
 						InfiniteTerrain.m_alphaMap[z, x, 1] = amountLeft;
 					}
@@ -153,48 +144,36 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 						else
 							InfiniteTerrain.m_alphaMap[z, x, 2] = amountLeft;
 
-
-						if (grassValue > 0.7f && amountLeft > 0 && height < tundraHeight && detailNoise > 0.7f && height > InfiniteLandscape.waterHeight + 3f)
+						if (InfiniteTerrain.RenderDetailsStatic)
 						{
-							if(clumpNoise>0.5f)
-								InfiniteTerrain.detailMap0[z, x] = 100; // OK density
-																	// Dist 300, density 0.5, res/patch 16
-						}
-						else if( amountLeft > 0 && height < tundraHeight && height > InfiniteLandscape.waterHeight +3f)
-						{
+							if (grassValue > 0.7f && amountLeft > 0 && height < tundraHeight && detailNoise > 0.7f && height > InfiniteLandscape.waterHeight + 3f)
+							{
+								if(clumpNoise>0.5f)
+									InfiniteTerrain.detailMap0[z, x] = 100; // OK density
+																		// Dist 300, density 0.5, res/patch 16
+							}
+							else if( amountLeft > 0 && height < tundraHeight && height > InfiniteLandscape.waterHeight +3f)
+							{
 
-							if (clumpNoise < 0.5f)
-							InfiniteTerrain.detailMap1[z, x] = 20; // test value
-						}
+								if (clumpNoise < 0.5f)
+								InfiniteTerrain.detailMap1[z, x] = 40; // value 20 clumps clearly separated
+							}
 
-						//float stoneNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 5, 100, 3.0f) + 2.2f - (height / 100.0f); uniformly dropped
-						float stoneNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 2, 100, 3.0f) + 2.2f - (height / 100.0f);
-						float beachStoneNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 2, 100, 3.0f);
+							//float stoneNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 5, 100, 3.0f) + 2.2f - (height / 100.0f); uniformly dropped
+							float stoneNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 2, 100, 3.0f) + 2.2f - (height / 100.0f);
+							float beachStoneNoise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 2, 100, 3.0f);
 
-						// stones  here and there
-						if(stoneNoise > 0.7f  && stoneNoise < 0.72f && height < tundraHeight && slopeValue < 0.3f )
-							InfiniteTerrain.detailMap2[z, x] = 5;
 
-						// near waterline stones
-						if (beachStoneNoise > 0.7f  && height > 50 && height < 60  && slopeValue < 0.1f)
-							InfiniteTerrain.detailMap2[z, x] = 5;
-
-					}
-					/*
-					else
-					{
-					
-					
-						if(height >highlandsHeight)
-							InfiniteTerrain.m_alphaMap[z, x, 2] = totalAmount;
-						else
-							InfiniteTerrain.m_alphaMap[z, x, 3] = totalAmount;
 						
-						//var percent = map(slopeValue, 0f, 0.2f, 0, 1);
-						//InfiniteTerrain.m_alphaMap[z, x, 1] = totalAmount * percent;
-						//InfiniteTerrain.m_alphaMap[z, x, 3] = 1 - (totalAmount * percent);
+							// stones  here and there
+							if (stoneNoise > 0.7f && stoneNoise < 0.72f && height < tundraHeight && slopeValue < 0.3f)
+								InfiniteTerrain.detailMap2[z, x] = 5;
+
+							// near waterline stones
+							if (beachStoneNoise > 0.7f && height > 50 && height < 60 && slopeValue < 0.1f)
+								InfiniteTerrain.detailMap2[z, x] = 5;
+						}
 					}
-					*/
 				}
 			}
 		}
@@ -204,75 +183,4 @@ public class SplatDetailPatch : IPatch  //To save some calls I have merged the s
 	{
 		return b1 + (s - a1) * (b2 - b1) / (a2 - a1);
 	}
-
-	void FillSplatDetailPatch2()
-    {
-        /*
-        float heightThres = 700;
-        float sandHeight = 80;
-        float ratio = (float)InfiniteLandscape.m_landScapeSize / (float)InfiniteTerrain.m_heightMapSize;
-
-        int debug = 0;
-
-        for (int x = h0; x < h1; x++)
-        {
-            
-
-            for (int z = 0; z < InfiniteTerrain.m_alphaMapSize; z++)
-            {
-                float worldPosX = (x + globalTileX * (InfiniteTerrain.m_heightMapSize - 1)) * ratio;
-                float worldPosZ = (z + globalTileZ * (InfiniteTerrain.m_heightMapSize - 1)) * ratio;
-
-                InfiniteTerrain.detailMap0[z, x] = 0;
-                InfiniteTerrain.detailMap1[z, x] = 0;
-                InfiniteTerrain.detailMap2[z, x] = 0;
-                InfiniteTerrain.detailMap3[z, x] = 0;
-
-                InfiniteTerrain.m_alphaMap[z, x, 0] = 0;
-                InfiniteTerrain.m_alphaMap[z, x, 1] = 0;
-                InfiniteTerrain.m_alphaMap[z, x, 2] = 0;
-                InfiniteTerrain.m_alphaMap[z, x, 3] = 0;
-
-                float normX = x * 1.0f / (InfiniteTerrain.m_alphaMapSize - 1);
-                float normZ = z * 1.0f / (InfiniteTerrain.m_alphaMapSize - 1);
-
-                float angle = terrain.terrainData.GetSteepness(normX, normZ);
-                float height = terrain.terrainData.GetInterpolatedHeight(normX, normZ);
-                float frac = angle / 90.0f;
-
-                //debug++;
-                
-                if (height < heightThres)
-                {
-                    //details
-                    if (frac < 0.6f && height > 1.1f * InfiniteLandscape.waterHeight)
-                    {
-                        // float noise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 2, 3000, 1.0f);
-                        float noise = m_detailNoise.FractalNoise2D(worldPosX, worldPosZ, 2, 1000, 1.0f);
-
-
-                        float c = Mathf.Clamp01(Mathf.Pow(height / sandHeight, 3));
-
-                        InfiniteTerrain.m_alphaMap[z, x, 0] = frac;
-                        InfiniteTerrain.m_alphaMap[z, x, 1] = (1 - frac) * c;
-                        InfiniteTerrain.m_alphaMap[z, x, 2] = 0;
-                        InfiniteTerrain.m_alphaMap[z, x, 3] = 1 - frac - (1 - frac) * c;
-                    }
-                }
-                else
-                {
-                    InfiniteTerrain.m_alphaMap[z, x, 0] = 1 - height / 500;
-                    InfiniteTerrain.m_alphaMap[z, x, 1] = 0;
-                    InfiniteTerrain.m_alphaMap[z, x, 2] = height / 500;
-                    InfiniteTerrain.m_alphaMap[z, x, 3] = 0;
-
-                    //InfiniteTerrain.m_alphaMap[z, x, 0] = 1 - height / 500;
-                    //InfiniteTerrain.m_alphaMap[z, x, 1] = 0;
-                    //InfiniteTerrain.m_alphaMap[z, x, 2] = height / 500;
-                    //InfiniteTerrain.m_alphaMap[z, x, 3] = 1;
-                }
-		    }	
-        }
-		*/
-    }
 }

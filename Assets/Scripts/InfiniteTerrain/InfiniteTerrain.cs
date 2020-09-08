@@ -5,11 +5,17 @@ using System.Collections.Generic;
 public class InfiniteTerrain : InfiniteLandscape
 {
 	// Holds the name of the terrain tile and the randomly generated number, that determines the combination of land mass types 
-	// used to calculate the height if the terrain at each coordinate 
+	// used to calculate the height of the terrain at each coordinate 
 
+	// for using something else than Unity built-in materia for terrain
 	public bool useTestMaterial;
+	public static bool RenderTreesStatic;
+	public bool RenderTrees;
+	public static bool RenderDetailsStatic;
+	public bool RenderDetails;
 	public Material testMaterial;
-	
+	public bool useDrawInstancing;
+
 	public static Dictionary<string, int> LandmassDict = new Dictionary<string, int>();
 
     // 2-dimensional table for holding values that form a round sine bell shape 
@@ -39,7 +45,6 @@ public class InfiniteTerrain : InfiniteLandscape
     public GameObject[] detailMesh = new GameObject[2];
 
     private DetailRenderMode detailMode;
-    
 
     public static int numOfTreesPerTerrain = 9000;
     private GameObject[] trees = new GameObject[numOfTreePrototypes];
@@ -61,10 +66,9 @@ public class InfiniteTerrain : InfiniteLandscape
 
 	public Color[] splatSpecular = new Color[numOfSplatPrototypes];
 
-
 	private SplatPrototype[] m_splatPrototypes = new SplatPrototype[numOfSplatPrototypes];
-    //Details
-
+    
+	//Details
     public const int m_detailMapSize = m_alphaMapSize;                 //Resolutions of detail (Grass) layers SHOULD BE EQUAL TO SPLAT RES
     public static int[,] detailMap0 = new int[m_detailMapSize, m_detailMapSize];
     public static int[,] detailMap1 = new int[m_detailMapSize, m_detailMapSize];
@@ -93,17 +97,26 @@ public class InfiniteTerrain : InfiniteLandscape
 
 
 
+	// Test: a castle/town that will obey terrain height
 	public CastleCreator castleCreator;
 
 	public bool createCastle;
 
+	// this is used to create "fjord"- like small walleys and hills 
 	public AnimationCurve TestCurve;
 	public static AnimationCurve StaticTestCurve;
 
+	// not in use
+	public AnimationCurve TestCurve2;
+	public static AnimationCurve StaticTestCurve2;
 
 	void Awake()
     {
+		RenderDetailsStatic = RenderDetails;
+		RenderTreesStatic = RenderTrees;
 		StaticTestCurve = TestCurve;
+		StaticTestCurve2 = TestCurve2;
+
 		Texture2D falloff = new Texture2D(513,513);
        	fallOffTable = GenerateFalloffTable();
 
@@ -116,17 +129,11 @@ public class InfiniteTerrain : InfiniteLandscape
 
 		}
 
-		// splat[0] = Resources.Load("Textures/" + "rock_2048") as Texture2D;
-		// splat[1] = Resources.Load("Textures/" + "forst_1024") as Texture2D;
-		// splat[2] = Resources.Load("Textures/" + "snow_512") as Texture2D;
-		// splat[3] = Resources.Load("Textures/" + "GoodDirt") as Texture2D;
-
-		//Debug.Log("m_alphaMapSize " + m_alphaMapSize);
-
-// to set certain areas non-random, this can be done:
+		// to set certain areas non-random, this can be done:
         // use combination of 1,2,4,8
         // there is no limit of different landmass types, other than performance, 4 is just easy to test amount that gives good variety already
-        
+        // here starting coordinate is 9003/9003
+
         /*
         LandmassDict.Add("9002_9002", 1);
         LandmassDict.Add("9003_9002", 1);
@@ -220,7 +227,6 @@ public class InfiniteTerrain : InfiniteLandscape
 		trees[4] = m_treeProtoTypes[4].prefab as GameObject;
 		trees[5] = m_treeProtoTypes[5].prefab as GameObject;
 
-
 		Vector2[] splatTileSize = new Vector2[5] { new Vector2(Tile0, Tile0), new Vector2(Tile1, Tile1), new Vector2(Tile2, Tile2), new Vector2(Tile3, Tile3), new Vector2(Tile4, Tile4) };
         for (int i = 0; i < numOfSplatPrototypes; i++)
             m_splatPrototypes[i] = new SplatPrototype();
@@ -229,12 +235,8 @@ public class InfiniteTerrain : InfiniteLandscape
         for (int i = 0; i < numOfSplatPrototypes; i++)
         {
             m_splatPrototypes[i].texture = splat[i];
-			
 			m_splatPrototypes[i].normalMap = splatNormals[i];
-
 			m_splatPrototypes[i].specular = splatSpecular[i];
-
-
 			m_splatPrototypes[i].tileOffset = Vector2.zero;
             m_splatPrototypes[i].tileSize = splatTileSize[i];
             m_splatPrototypes[i].texture.Apply(true);
@@ -242,8 +244,6 @@ public class InfiniteTerrain : InfiniteLandscape
 
         for (int i = 0; i < numOfDetailPrototypes; i++)
         {
-
-            
             if(i == 2) // overriding third detail with mesh
             {
                 m_detailProtoTypes[i] = new DetailPrototype();
@@ -255,7 +255,6 @@ public class InfiniteTerrain : InfiniteLandscape
                 m_detailProtoTypes[i].minHeight = 0.5f;
                 m_detailProtoTypes[i].minWidth = 0.5f;
 
-
                 m_detailProtoTypes[i].maxHeight = 1;
                 m_detailProtoTypes[i].maxWidth = 1;
 
@@ -266,9 +265,7 @@ public class InfiniteTerrain : InfiniteLandscape
                 
             }
             else
-            
             {
-                
                 m_detailProtoTypes[i] = new DetailPrototype();
                 m_detailProtoTypes[i].prototypeTexture = detailTexture[i];
                 m_detailProtoTypes[i].renderMode = detailMode;
@@ -289,9 +286,7 @@ public class InfiniteTerrain : InfiniteLandscape
             for (int j = 0; j < dim; j++)
             {
                 TerrainData terrainData = new TerrainData();
-
-
-                terrainData.wavingGrassStrength = m_wavingGrassStrength;
+				terrainData.wavingGrassStrength = m_wavingGrassStrength;
                 terrainData.wavingGrassAmount = m_wavingGrassAmount;
                 terrainData.wavingGrassSpeed = m_wavingGrassSpeed;
                 terrainData.wavingGrassTint = m_wavingGrassTint;
@@ -313,6 +308,10 @@ public class InfiniteTerrain : InfiniteLandscape
 					m_terrainGrid[i, j].materialType = Terrain.MaterialType.Custom;
 					m_terrainGrid[i, j].materialTemplate = testMaterial;
 				}
+
+				if(useDrawInstancing)
+					m_terrainGrid[i, j].drawInstanced = false;
+
 			}
         }
 
@@ -363,8 +362,6 @@ public class InfiniteTerrain : InfiniteLandscape
         m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].GetComponent<Collider>().enabled = false;
         m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].GetComponent<Collider>().enabled = true;
 
-
-		// Test: createCastle()
 		if(createCastle)
 			castleCreator.CreateCastle(1500, 1500);
 	}
@@ -405,7 +402,7 @@ public class InfiniteTerrain : InfiniteLandscape
 		Debug.Log("UpdateTerrainPositions, prevX /curX " + prevGlobalIndexX + " / " + curGlobalIndexX + "prevZ / curZ " + prevGlobalIndexZ + " / " + curGlobalIndexZ);
 		if (curGlobalIndexZ != prevGlobalIndexZ && curGlobalIndexX != prevGlobalIndexX)
         {
-            int z; int z0;
+			int z; int z0;
             if (curGlobalIndexZ > prevGlobalIndexZ)
             {
                 z0 = curGlobalIndexZ + 1;
@@ -452,7 +449,7 @@ public class InfiniteTerrain : InfiniteLandscape
         }
         else if (curGlobalIndexZ != prevGlobalIndexZ)
         {
-            int z; int z0;
+			int z; int z0;
             if (curGlobalIndexZ > prevGlobalIndexZ)
             {
                 z0 = curGlobalIndexZ + 1;
@@ -476,33 +473,30 @@ public class InfiniteTerrain : InfiniteLandscape
         }
         else if (curGlobalIndexX != prevGlobalIndexX)
         {
-            int x; int x0;
-            if (curGlobalIndexX > prevGlobalIndexX)
-            {
-                x0 = curGlobalIndexX + 1;
-                x = PreviousCyclicIndex(prevCyclicIndexX);
-            }
-            else
-            {
-                x0 = curGlobalIndexX - 1;
-                x = NextCyclicIndex(prevCyclicIndexX);
-            }
+			int x; int x0;
+			if (curGlobalIndexX > prevGlobalIndexX)
+			{
+				x0 = curGlobalIndexX + 1;
+				x = PreviousCyclicIndex(prevCyclicIndexX);
+			}
+			else
+			{
+				x0 = curGlobalIndexX - 1;
+				x = NextCyclicIndex(prevCyclicIndexX);
+			}
 
-            int[] listZ = { PreviousCyclicIndex(prevCyclicIndexZ), prevCyclicIndexZ, NextCyclicIndex(prevCyclicIndexZ) };
-            for (int i = 0; i < dim; i++)
-            {
-                Vector3 newPos = new Vector3(
-                m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.x + (curGlobalIndexX - prevGlobalIndexX) * m_landScapeSize,
-                m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.y,
-                m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.z + (i - 1) * m_landScapeSize);
+			int[] listZ = { PreviousCyclicIndex(curCyclicIndexZ), curCyclicIndexZ, NextCyclicIndex(curCyclicIndexZ) };
+			for (int i = 0; i < dim; i++)
+			{
+				Vector3 newPos = new Vector3(
+				m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.x + (curGlobalIndexX - prevGlobalIndexX) * m_landScapeSize,
+				m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.y,
+				m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.z + (i - 1) * m_landScapeSize);
 
 				PatchManager.AddTerrainInfo(x0, curGlobalIndexZ + i - 1, m_terrainGrid[x, listZ[i]], newPos);
             }
         }
         PatchManager.MakePatches();
-		// Test: createCastle()
-		
-
 	}
 
     IEnumerator CountdownForPatch()
@@ -517,10 +511,10 @@ public class InfiniteTerrain : InfiniteLandscape
         for (int i = 0; i < dim; i++)
             for (int j = 0; j < dim; j++)
             {
-               //Debug.Log("Enabling terrain collider");
-               m_terrainGrid[i, j].transform.GetComponent<TerrainCollider>().enabled = true;
-                m_terrainGrid[i, j].Flush();
-                yield return new WaitForEndOfFrame();
+        		//Debug.Log("Enabling terrain collider");
+            	m_terrainGrid[i, j].transform.GetComponent<TerrainCollider>().enabled = true;
+            	m_terrainGrid[i, j].Flush();
+            	yield return new WaitForEndOfFrame();
             }
     }
 
@@ -545,7 +539,6 @@ public class InfiniteTerrain : InfiniteLandscape
         updateRound = updateLandscape;
         StartTime = Time.deltaTime;
         //---------------
-
 
         if (updateLandscape == true)
         {
@@ -649,7 +642,9 @@ public static float[,] GenerateFalloffTable()
         return table;    
     }
 
-
+	// Landmass types are assigned randomly, but it would make no sense if landmass types once set would change then the area is left and re-entered, so
+	// values are stored. To make world persistent, these could be saved to a file.
+	// 
     // If value for landmasses has already been decided, it is returned. If not, random value is assigned to the new dictionary entry. 
 	public static int GetOrAssignLandMassTypes(string key)
     {
@@ -670,7 +665,7 @@ public static float[,] GenerateFalloffTable()
 			if(storedRandomsCounter >= m_storedRandoms.Length)
 				storedRandomsCounter = 0;
 
-			Debug.Log("adding key >>> " + key + " value: " + value);
+			//Debug.Log("adding key >>> " + key + " value: " + value);
             LandmassDict.Add(key, value);
             return value;
         }
