@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using System;
 
 public static class PatchManager
 {
@@ -52,11 +53,15 @@ public static class PatchManager
 		
 		//Debug.Log("Adding new terrainInfo to PatchList: globX: " + globX + " globZ: " + globZ);
         patchList.Add(new TerrainInfo(globX, globZ, terrain, pos));
-    }
+
+	}
 
     public static void MakePatches()
     {
-        foreach (TerrainInfo tI in patchList)
+
+		// TODO Calculate here the area that needs to be clear of trees etc, and pass xmin xmax, zmin z max to Patchs
+
+		foreach (TerrainInfo tI in patchList)
         {
             for (int i = 0; i < terrainPatchRes; i++)
 			{
@@ -74,14 +79,22 @@ public static class PatchManager
 					InfiniteTerrain.m_alphaMapSize * i / splatDetailPatchRes, InfiniteTerrain.m_alphaMapSize * (i + 1) / splatDetailPatchRes, tI));
 			}    
         }
-       
-        foreach (TerrainInfo tI in patchList)
-            for (int i = 0; i < treePatchRes; i++)
+
+		foreach (TerrainInfo tI in patchList)
+		{
+			// todo reconsider if this shoul be done oin one go for each terrain, not inside foreach loop three times
+			AreaData aData = InfiniteTerrain.GetAreaData(tI.globalX, tI.globalZ);
+			if(aData.castleData != null)
+			{
+				Debug.Log("Castle exists, x: " + aData.castleData.coordX + " " + aData.castleData.coordZ + " size: " + aData.castleData.size);
+			}
+
+			for (int i = 0; i < treePatchRes; i++)
 			{
 				patchQueue.Enqueue(new TreePatch(tI.globalX, tI.globalZ, tI.terrain,
-					InfiniteTerrain.numOfTreesPerTerrain * i / treePatchRes, InfiniteTerrain.numOfTreesPerTerrain * (i + 1) / treePatchRes, tI));	
+					InfiniteTerrain.numOfTreesPerTerrain * i / treePatchRes, InfiniteTerrain.numOfTreesPerTerrain * (i + 1) / treePatchRes, tI));
 			}
-                
-        patchList.Clear();
+		}
+		patchList.Clear();
     }
 }

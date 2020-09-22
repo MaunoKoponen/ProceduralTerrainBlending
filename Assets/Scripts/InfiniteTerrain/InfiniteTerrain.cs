@@ -1,9 +1,38 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
+using System;
+
+
+public class AreaData
+{
+	public string areaName;
+	public int landMassValue;
+	public int mapX;
+	public int mapZ;
+	public float xCoord;
+	public float yCoord;
+	public CastleData castleData;
+}
+
+public class CastleData
+{
+	public int size;
+	public GameObject rootGameObject;
+
+	public int mapX;
+	public int mapZ;
+
+	public float coordX;
+
+	public float coordZ;
+
+}
 
 public class InfiniteTerrain : InfiniteLandscape
 {
+	
 	// Holds the name of the terrain tile and the randomly generated number, that determines the combination of land mass types 
 	// used to calculate the height of the terrain at each coordinate 
 
@@ -16,9 +45,13 @@ public class InfiniteTerrain : InfiniteLandscape
 	public Material testMaterial;
 	public bool useDrawInstancing;
 
-	public static Dictionary<string, int> LandmassDict = new Dictionary<string, int>();
+	//public static Dictionary<string, int> LandmassDict = new Dictionary<string, int>();
 
-    // 2-dimensional table for holding values that form a round sine bell shape 
+
+	public static Dictionary<string, AreaData> AreaDict = new Dictionary<string, AreaData>();
+
+
+	// 2-dimensional table for holding values that form a round sine bell shape 
 	public static float[,] fallOffTable;
 
 	static int[] m_storedRandoms = new int[100];
@@ -97,12 +130,20 @@ public class InfiniteTerrain : InfiniteLandscape
 
 
 
+	//UI
+	public Text terrainName;
+	public Text hillsValue;
+	public Text mountainsValue;
+	public Text ridgedMountainsValue;
+	public Text plainsValue;
+
 	// Test: a castle/town that will obey terrain height
 	public CastleCreator castleCreator;
-
 	public bool createCastle;
+	private List<CastleData> CastleBuildList = new List<CastleData>();
 
-	// this is used to create "fjord"- like small walleys and hills 
+
+	// this is used to create "fjord"- landmass type. Its like small walleys and flat topped and hills 
 	public AnimationCurve TestCurve;
 	public static AnimationCurve StaticTestCurve;
 
@@ -120,12 +161,12 @@ public class InfiniteTerrain : InfiniteLandscape
 		Texture2D falloff = new Texture2D(513,513);
        	fallOffTable = GenerateFalloffTable();
 
-		Random.InitState(InfiniteLandscape.RandomSeed);
+		UnityEngine.Random.InitState(InfiniteLandscape.RandomSeed);
 		for (int i = 0; i < m_storedRandoms.Length; i++)
 		{
 			//m_storedRandoms[i] = Random.Range(0, 7); // lots of plains
 
-			m_storedRandoms[i] = Random.Range(1, 9); // less plains, more water
+			m_storedRandoms[i] = UnityEngine.Random.Range(1, 9); // less plains, more water
 
 		}
 
@@ -133,70 +174,6 @@ public class InfiniteTerrain : InfiniteLandscape
         // use combination of 1,2,4,8
         // there is no limit of different landmass types, other than performance, 4 is just easy to test amount that gives good variety already
         // here starting coordinate is 9003/9003
-
-        /*
-        LandmassDict.Add("9002_9002", 1);
-        LandmassDict.Add("9003_9002", 1);
-        LandmassDict.Add("9004_9002", 3);
-        LandmassDict.Add("9005_9002", 3);
-        LandmassDict.Add("9006_9002", 3);
-
-        LandmassDict.Add("9002_9003", 1);
-        LandmassDict.Add("9003_9003", 1);
-        LandmassDict.Add("9004_9003", 1);
-        LandmassDict.Add("9005_9003", 3);
-        LandmassDict.Add("9006_9003", 3);
-
-        LandmassDict.Add("9002_9004", 4);
-        LandmassDict.Add("9003_9004", 1);
-        LandmassDict.Add("9004_9004", 9); // center
-        LandmassDict.Add("9005_9004", 1);
-        LandmassDict.Add("9006_9004", 6);
-
-        LandmassDict.Add("9002_9005", 7);
-        LandmassDict.Add("9003_9005", 7);
-        LandmassDict.Add("9004_9005", 1);
-        LandmassDict.Add("9005_9005", 9);
-        LandmassDict.Add("9006_9005", 9);
-
-        LandmassDict.Add("9002_9006", 7);
-        LandmassDict.Add("9003_9006", 7);
-        LandmassDict.Add("9004_9006", 8);
-        LandmassDict.Add("9005_9006", 9);
-        LandmassDict.Add("9006_9006", 9);
-        */
-
-        /*
-        LandmassDict.Add("9001_9001", 1);
-        LandmassDict.Add("9002_9001", 1);
-        LandmassDict.Add("9003_9001", 1);
-        LandmassDict.Add("9004_9001", 1);
-        LandmassDict.Add("9005_9001", 1);
-
-        LandmassDict.Add("9001_9002", 1);
-        LandmassDict.Add("9002_9002", 1);
-        LandmassDict.Add("9003_9002", 1);
-        LandmassDict.Add("9004_9002", 1);
-        LandmassDict.Add("9005_9002", 1);
-
-        LandmassDict.Add("9001_9003", 1);
-        LandmassDict.Add("9002_9003", 1);
-        LandmassDict.Add("9003_9003", 1);
-        LandmassDict.Add("9004_9003", 1);
-        LandmassDict.Add("9005_9003", 1);
-
-        LandmassDict.Add("9001_9004", 1);
-        LandmassDict.Add("9002_9004", 1);
-        LandmassDict.Add("9003_9004", 1);
-        LandmassDict.Add("9004_9004", 3);
-        LandmassDict.Add("9005_9004", 1);
-
-        LandmassDict.Add("9001_9005", 1);
-        LandmassDict.Add("9002_9005", 1);
-        LandmassDict.Add("9003_9005", 1);
-        LandmassDict.Add("9004_9005", 1);
-        LandmassDict.Add("9005_9005", 1);
-        */
 
         // changed tree types:
         m_treeProtoTypes = new TreePrototype[numOfTreePrototypes];
@@ -362,8 +339,10 @@ public class InfiniteTerrain : InfiniteLandscape
         m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].GetComponent<Collider>().enabled = false;
         m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].GetComponent<Collider>().enabled = true;
 
-		if(createCastle)
-			castleCreator.CreateCastle(1500, 1500);
+
+		
+		//if(createCastle)
+		//	castleCreator.CreateCastle(1500, 1500, );
 	}
 
     void UpdateTerrainNeighbors()
@@ -397,92 +376,51 @@ public class InfiniteTerrain : InfiniteLandscape
         return i == 0 ? dim - 1 : (i-1) % dim;
     }
 
-    private void UpdateTerrainPositions()
+	private void UpdateTerrainPositions()
 	{
 		Debug.Log("UpdateTerrainPositions, prevX /curX " + prevGlobalIndexX + " / " + curGlobalIndexX + "prevZ / curZ " + prevGlobalIndexZ + " / " + curGlobalIndexZ);
 		if (curGlobalIndexZ != prevGlobalIndexZ && curGlobalIndexX != prevGlobalIndexX)
-        {
-			int z; int z0;
-            if (curGlobalIndexZ > prevGlobalIndexZ)
-            {
-                z0 = curGlobalIndexZ + 1;
-                z = PreviousCyclicIndex(prevCyclicIndexZ);
-            }
-            else
-            {
-                z0 = curGlobalIndexZ - 1;
-                z = NextCyclicIndex(prevCyclicIndexZ);
-            }
+		{
+			int z; int z0; int deletionZ;
+			if (curGlobalIndexZ > prevGlobalIndexZ)
+			{
+				z0 = curGlobalIndexZ + 1;
+				z = PreviousCyclicIndex(prevCyclicIndexZ);
+				deletionZ = prevGlobalIndexZ - 1;
+			}
+			else
+			{
+				z0 = curGlobalIndexZ - 1;
+				z = NextCyclicIndex(prevCyclicIndexZ);
+				deletionZ = prevGlobalIndexZ + 1;
+			}
 
-            int[] listX = { PreviousCyclicIndex(prevCyclicIndexX), prevCyclicIndexX, NextCyclicIndex(prevCyclicIndexX) };
-            for (int i = 1; i < dim; i++)
-            {
-                Vector3 newPos = new Vector3(
-                m_terrainGrid[prevCyclicIndexX, curCyclicIndexZ].transform.position.x + (i - 1) * m_landScapeSize,
-                m_terrainGrid[prevCyclicIndexX, curCyclicIndexZ].transform.position.y,
-                m_terrainGrid[prevCyclicIndexX, curCyclicIndexZ].transform.position.z + (curGlobalIndexZ - prevGlobalIndexZ) * m_landScapeSize);
+			int[] listX = { PreviousCyclicIndex(prevCyclicIndexX), prevCyclicIndexX, NextCyclicIndex(prevCyclicIndexX) };
+			for (int i = 1; i < dim; i++)
+			{
+				Vector3 newPos = new Vector3(
+				m_terrainGrid[prevCyclicIndexX, curCyclicIndexZ].transform.position.x + (i - 1) * m_landScapeSize,
+				m_terrainGrid[prevCyclicIndexX, curCyclicIndexZ].transform.position.y,
+				m_terrainGrid[prevCyclicIndexX, curCyclicIndexZ].transform.position.z + (curGlobalIndexZ - prevGlobalIndexZ) * m_landScapeSize);
 
-                PatchManager.AddTerrainInfo(prevGlobalIndexX + i - 1, z0, m_terrainGrid[listX[i], z], newPos);
-            }
-            int x; int x0;
-            if (curGlobalIndexX > prevGlobalIndexX)
-            {
-                x0 = curGlobalIndexX + 1;
-                x = PreviousCyclicIndex(prevCyclicIndexX);
-            }
-            else
-            {
-                x0 = curGlobalIndexX - 1;
-                x = NextCyclicIndex(prevCyclicIndexX);
-            }
-
-            int[] listZ = { PreviousCyclicIndex(curCyclicIndexZ), curCyclicIndexZ, NextCyclicIndex(curCyclicIndexZ) };
-            for (int i = 0; i < dim; i++)
-            {
-                Vector3 newPos = new Vector3(
-                m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.x + (curGlobalIndexX - prevGlobalIndexX) * m_landScapeSize,
-                m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.y,
-                m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.z + (i - 1) * m_landScapeSize);
-
-                PatchManager.AddTerrainInfo(x0, curGlobalIndexZ + i - 1, m_terrainGrid[x, listZ[i]], newPos);
-            }
-        }
-        else if (curGlobalIndexZ != prevGlobalIndexZ)
-        {
-			int z; int z0;
-            if (curGlobalIndexZ > prevGlobalIndexZ)
-            {
-                z0 = curGlobalIndexZ + 1;
-                z = PreviousCyclicIndex(prevCyclicIndexZ);
-            }
-            else
-            {
-                z0 = curGlobalIndexZ - 1;
-                z = NextCyclicIndex(prevCyclicIndexZ);
-            }
-                int[] listX = { PreviousCyclicIndex(prevCyclicIndexX), prevCyclicIndexX, NextCyclicIndex(prevCyclicIndexX) };
-                for (int i = 0; i < dim; i++)
-                {
-                    Vector3 newPos = new Vector3(
-                    m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.x + (i - 1) * m_landScapeSize,
-                    m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.y,
-                    m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.z + (curGlobalIndexZ - prevGlobalIndexZ) * m_landScapeSize);
-
-                    PatchManager.AddTerrainInfo(curGlobalIndexX + i - 1, z0, m_terrainGrid[listX[i], z], newPos);
-                }
-        }
-        else if (curGlobalIndexX != prevGlobalIndexX)
-        {
-			int x; int x0;
+				PatchManager.AddTerrainInfo(prevGlobalIndexX + i - 1, z0, m_terrainGrid[listX[i], z], newPos);
+				int mapX = prevGlobalIndexX + i - 1;
+				int mapZ = z0;
+				StoreCordinatesForCastle(mapX, mapZ, newPos);
+				DeleteCastle( curGlobalIndexX + i - 1,deletionZ);
+			}
+			int x; int x0; int deletionX;
 			if (curGlobalIndexX > prevGlobalIndexX)
 			{
 				x0 = curGlobalIndexX + 1;
 				x = PreviousCyclicIndex(prevCyclicIndexX);
+				deletionX = prevGlobalIndexX - 1;
 			}
 			else
 			{
 				x0 = curGlobalIndexX - 1;
 				x = NextCyclicIndex(prevCyclicIndexX);
+				deletionX = prevGlobalIndexX + 1;
 			}
 
 			int[] listZ = { PreviousCyclicIndex(curCyclicIndexZ), curCyclicIndexZ, NextCyclicIndex(curCyclicIndexZ) };
@@ -494,10 +432,163 @@ public class InfiniteTerrain : InfiniteLandscape
 				m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.z + (i - 1) * m_landScapeSize);
 
 				PatchManager.AddTerrainInfo(x0, curGlobalIndexZ + i - 1, m_terrainGrid[x, listZ[i]], newPos);
-            }
-        }
-        PatchManager.MakePatches();
+				int mapX = x0;
+				int mapZ = curGlobalIndexZ + i - 1;
+				StoreCordinatesForCastle(mapX, mapZ, newPos);
+				DeleteCastle(deletionX, curGlobalIndexZ + i - 1);
+			}
+		}
+		else if (curGlobalIndexZ != prevGlobalIndexZ)
+		{
+			Debug.Log("BBBBB");
+			
+			int z; int z0; int deletionZ;
+			if (curGlobalIndexZ > prevGlobalIndexZ)
+			{
+				z0 = curGlobalIndexZ + 1;
+				z = PreviousCyclicIndex(prevCyclicIndexZ);
+				deletionZ = prevGlobalIndexZ - 1;
+			}
+			else
+			{
+				z0 = curGlobalIndexZ - 1;
+				z = NextCyclicIndex(prevCyclicIndexZ);
+				deletionZ = prevGlobalIndexZ + 1;
+			}
+			int[] listX = { PreviousCyclicIndex(prevCyclicIndexX), prevCyclicIndexX, NextCyclicIndex(prevCyclicIndexX) };
+			for (int i = 0; i < dim; i++)
+			{
+				Vector3 newPos = new Vector3(
+				m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.x + (i - 1) * m_landScapeSize,
+				m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.y,
+				m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.z + (curGlobalIndexZ - prevGlobalIndexZ) * m_landScapeSize);
+
+				PatchManager.AddTerrainInfo(curGlobalIndexX + i - 1, z0, m_terrainGrid[listX[i], z], newPos);
+
+				int mapX = curGlobalIndexX + i - 1;
+				int mapZ = z0;
+				StoreCordinatesForCastle(mapX, mapZ, newPos);
+				DeleteCastle( curGlobalIndexX + i - 1, deletionZ);
+			}
+		}
+		else if (curGlobalIndexX != prevGlobalIndexX)
+		{
+			Debug.Log("DDDD -> prevGlobalIndexX  " + prevGlobalIndexX  + ", curGlobalIndexX: " + curGlobalIndexX );
+
+			int x; int x0; int deletionX;
+			if (curGlobalIndexX > prevGlobalIndexX)
+			{
+				x0 = curGlobalIndexX + 1;
+				x = PreviousCyclicIndex(prevCyclicIndexX);
+				deletionX = prevGlobalIndexX - 1;
+			}
+			else
+			{
+				x0 = curGlobalIndexX - 1;
+				x = NextCyclicIndex(prevCyclicIndexX);
+				deletionX = prevGlobalIndexX + 1;
+			}
+
+			int[] listZ = { PreviousCyclicIndex(curCyclicIndexZ), curCyclicIndexZ, NextCyclicIndex(curCyclicIndexZ) };
+			for (int i = 0; i < dim; i++)
+			{
+				Vector3 newPos = new Vector3(
+				m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.x + (curGlobalIndexX - prevGlobalIndexX) * m_landScapeSize,
+				m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.y,
+				m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].transform.position.z + (i - 1) * m_landScapeSize);
+
+				PatchManager.AddTerrainInfo(x0, curGlobalIndexZ + i - 1, m_terrainGrid[x, listZ[i]], newPos);
+				int mapX = x0;
+				int mapZ = curGlobalIndexZ + i - 1;
+				StoreCordinatesForCastle(mapX, mapZ, newPos);
+
+				DeleteCastle(deletionX, curGlobalIndexZ + i - 1);
+			}
+		}
+		PatchManager.MakePatches();
 	}
+
+
+	private List<GameObject> CastleRootPrefabs = new List<GameObject>();
+
+	private void ClearItemsRelatedToTerrain(string terrainName)
+	{
+		// test: delete same named castle items:
+
+
+	}
+
+	private void StartCastleCreation()
+	{
+		foreach(var item in CastleBuildList)
+		{
+			
+			castleCreator.CreateCastle(item);
+		}
+		CastleBuildList.Clear();
+	}
+
+
+	public static AreaData GetAreaData(int mapX, int mapZ)
+	{
+		string key = mapX + "_" + mapZ;
+		if (AreaDict.ContainsKey(key))
+		{
+			return AreaDict[key];
+		}
+		return null;
+	}
+
+	void StoreCordinatesForCastle(int mapX, int mapZ, Vector3 pos)
+	{
+		string key = mapX + "_" + mapZ;
+
+		// TODO if castle data is already created, dont recreate it, just pass the old data to build list
+
+		var castleData = new CastleData();
+		castleData.mapX = mapX;
+		castleData.mapZ = mapZ;
+		castleData.coordX = pos.x +1500; // position in center of terrain tile
+		castleData.coordZ = pos.z +1500;
+
+			if (AreaDict.ContainsKey(key))
+			{
+				AreaDict[key].castleData = castleData;
+			}
+		CastleBuildList.Add(castleData);
+	}
+
+	void DeleteCastle(int mapX, int mapZ)
+	{
+		Debug.Log("DeleteCastle from " + mapX + "_" + mapZ);
+
+		string key = mapX + "_" + mapZ;
+		if (AreaDict.ContainsKey(key))
+		{	
+			if(AreaDict[key].castleData != null)
+			{
+					GameObject root = AreaDict[key].castleData.rootGameObject;
+					if (root != null)
+					{
+					Destroy(root);//.transform.position = new Vector3(0, 0, 0);
+				}
+					else
+					{
+					Debug.Log(" - root was null");
+				}
+						
+			}
+			else
+			{
+				Debug.Log(" - CastleData  not found");
+			}	
+		}
+		else
+		{
+			Debug.Log(" - Did not find key " + key);
+		}
+	} 
+
 
     IEnumerator CountdownForPatch()
     {
@@ -511,12 +602,24 @@ public class InfiniteTerrain : InfiniteLandscape
         for (int i = 0; i < dim; i++)
             for (int j = 0; j < dim; j++)
             {
-        		//Debug.Log("Enabling terrain collider");
+        		Debug.Log("FlushTerrain, " + i + " " + j);
             	m_terrainGrid[i, j].transform.GetComponent<TerrainCollider>().enabled = true;
             	m_terrainGrid[i, j].Flush();
             	yield return new WaitForEndOfFrame();
             }
-    }
+
+		StartCastleCreation();
+
+		if (!savetestDone)
+		{
+			// TEST save terrain
+			savetestDone = true;
+			Debug.Log("Saving test");
+			TerrainSaver.Save("testSaving", m_terrainGrid[0, 0].terrainData);
+			Debug.Log("Saving test done");
+
+		}
+	}
 
     float StartTime;
     float oneUpdateTime;
@@ -524,12 +627,15 @@ public class InfiniteTerrain : InfiniteLandscape
     int updatecounter = 0;
     float biggestUpdateTime = 0f;
 
-    protected override void Update()
+
+	bool savetestDone = false;
+
+	protected override void Update()
     {
         base.Update();
 
-        //-------Just debugging--------
-        if(updateRound)
+		//-------Just debugging--------
+		if(updateRound)
         {
             // previous was updateRound
             float executionTime = Time.time - StartTime;
@@ -544,7 +650,21 @@ public class InfiniteTerrain : InfiniteLandscape
         {
             
             m_terrainGrid[curCyclicIndexX, curCyclicIndexZ].GetComponent<Collider>().enabled = true;        //Slow operation
-            m_terrainGrid[prevCyclicIndexX, prevCyclicIndexZ].GetComponent<Collider>().enabled = false;
+																											
+			// for displaying data in UI:
+			Terrain current = m_terrainGrid[curCyclicIndexX, curCyclicIndexZ];
+
+			Debug.Log("entered " + current.name);
+
+			terrainName.text = current.name;
+			int massType = InfiniteTerrain.GetOrAssignLandMassTypes(current.name);
+
+			hillsValue.text = (massType & 1) > 0 ? "yes": "no";
+			mountainsValue.text = (massType & 2) > 0 ? "yes": "no";
+			ridgedMountainsValue.text = (massType & 4) > 0 ? "yes" : "no";
+			plainsValue.text = (massType & 8) > 0 ? "yes" : "no";
+
+			m_terrainGrid[prevCyclicIndexX, prevCyclicIndexZ].GetComponent<Collider>().enabled = false;
 
             UpdateTerrainNeighbors();
             UpdateTerrainPositions();
@@ -645,30 +765,58 @@ public static float[,] GenerateFalloffTable()
 	// Landmass types are assigned randomly, but it would make no sense if landmass types once set would change then the area is left and re-entered, so
 	// values are stored. To make world persistent, these could be saved to a file.
 	// 
-    // If value for landmasses has already been decided, it is returned. If not, random value is assigned to the new dictionary entry. 
+	// If value for landmasses has already been decided, it is returned. If not, random value is assigned to the new dictionary entry. 
 	public static int GetOrAssignLandMassTypes(string key)
-    {
-        if (LandmassDict.ContainsKey(key))
-        {
-            return LandmassDict[key];
-        }
-        else
-        {
-			//int value = Random.Range(1, 17); // randomly combine all types with even weights - gives more square and blocky coastline
-			//int value =  Random.Range(1, 9) + 8; // always have plains - gives more natural coastline
+	{
 
-			// Using stored random values to assure no unplanned changes
-			
-			int value = m_storedRandoms[storedRandomsCounter] + 8; 
-			
+		// wip switch to AreaData
+
+		if (AreaDict.ContainsKey(key))
+		{
+			return AreaDict[key].landMassValue;
+		}
+		else
+		{
+
+			int value = m_storedRandoms[storedRandomsCounter] + 8;
+
 			storedRandomsCounter++;
-			if(storedRandomsCounter >= m_storedRandoms.Length)
+			if (storedRandomsCounter >= m_storedRandoms.Length)
 				storedRandomsCounter = 0;
 
 			//Debug.Log("adding key >>> " + key + " value: " + value);
-            LandmassDict.Add(key, value);
-            return value;
-        }
-    }
+
+			var area = new AreaData();
+			area.landMassValue = value;
+
+			AreaDict.Add(key, area);
+			return value;
+
+		}
+
+		/*
+				if (LandmassDict.ContainsKey(key))
+				{
+					return LandmassDict[key];
+				}
+				else
+				{
+					//int value = Random.Range(1, 17); // randomly combine all types with even weights - gives more square and blocky coastline
+					//int value =  Random.Range(1, 9) + 8; // always have plains - gives more natural coastline
+
+					// Using stored random values to assure no unplanned changes
+
+					int value = m_storedRandoms[storedRandomsCounter] + 8; 
+
+					storedRandomsCounter++;
+					if(storedRandomsCounter >= m_storedRandoms.Length)
+						storedRandomsCounter = 0;
+
+					//Debug.Log("adding key >>> " + key + " value: " + value);
+					LandmassDict.Add(key, value);
+					return value;
+					*/
+
+	}
 }
 

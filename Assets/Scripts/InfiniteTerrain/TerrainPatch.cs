@@ -319,7 +319,7 @@ public class TerrainPatch : IPatch
 
 
 // 
-	private int HasLandmassType(string key, int typeInt)
+	public static int HasLandmassType(string key, int typeInt)
 	{
 		int massType = InfiniteTerrain.GetOrAssignLandMassTypes(key);
 		bool is1 = false;

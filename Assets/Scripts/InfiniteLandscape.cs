@@ -3,19 +3,21 @@ using System.Collections;
 
 public class InfiniteLandscape : MonoBehaviour
 {
-	public static int RandomSeed = 53;//26;//38;//35;//37;//26; // mountains 53; // lowland and easy hills 38; //ver good, varied landmasses: 37;// mountains, some lakes: 35;//small islands 29; // lots of plains, mounntains in distance: 28;// bumpy mountains: 27;// good:26;
-
+	public static int RandomSeed = 4;
 	public GameObject PlayerObject;
 
     public static float waterHeight = 50;
  
     public static float m_landScapeSize = 3072;
 
-    protected const int dim = 3;
-	public static int initialGlobalIndexX = 300; 
+    // Amount of terrains used: 3 = 3x3:
+	protected const int dim = 3;
 
-	// TODO: There is a bug somewhere that breaks things if x and z starting coordinate is not same
-	public static int initialGlobalIndexZ = 600;
+	// needs to divisable by 3 TODO fix this so that value can be any integer
+	public static int initialGlobalIndexX = 12;
+
+	// needs to divisable by 3
+	public static int initialGlobalIndexZ = 999;
 
 	protected bool patchIsFilling = false;
     protected int prevGlobalIndexX = -1;
@@ -39,11 +41,10 @@ public class InfiniteLandscape : MonoBehaviour
 		int currentLocalIndexX = GetLocalIndex(PlayerObject.transform.position.x);
         int currentLocalIndexZ = GetLocalIndex(PlayerObject.transform.position.z);
 
-		
         if (curLocalIndexX != currentLocalIndexX || curLocalIndexZ != currentLocalIndexZ)
         {
 
-			Debug.Log("----------------- UpdateIndexes -> changed -----------------");
+			Debug.LogError("----------------- UpdateIndexes -> changed -----------------");
 
 
 			prevLocalIndexX = curLocalIndexX;
@@ -63,7 +64,10 @@ public class InfiniteLandscape : MonoBehaviour
             prevCyclicIndexZ = curCyclicIndexZ;
             curCyclicIndexZ = curGlobalIndexZ % dim;
 
-            return true;
+			Debug.Log("Entered new terrain at : " + curGlobalIndexX + "  " + curGlobalIndexZ);
+			
+
+			return true;
         }
         else return false;
     }

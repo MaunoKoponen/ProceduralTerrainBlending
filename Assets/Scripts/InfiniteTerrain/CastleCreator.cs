@@ -6,12 +6,14 @@ public class CastleCreator : MonoBehaviour
 
 	// GameObject names tell on what sides there are walls:
 
+	[SerializeField] private GameObject HelperObject;
 
 	[SerializeField] private GameObject Floor;
 	public GameObject[] Wall_Normal_Parts;
 	[SerializeField] private GameObject Wall_High_Normal;
 	[SerializeField] private GameObject Wall_High_entrance;
 
+	private CastleData m_data; // for storing the root object for destroying the castle
 
 	private enum NeighbourType
 	{
@@ -31,9 +33,12 @@ public class CastleCreator : MonoBehaviour
 	}
 
 
-	public int m_castleSize = 8;
+	public int m_castleSize = 2;
 
 	public int exitAmount = 4;
+
+	public float maxExitHeightDifference = 4;
+
 
 	public int stepSize = 20; // the y step size of terrain pieces
 	public int castleTileSize = 100;
@@ -41,12 +46,19 @@ public class CastleCreator : MonoBehaviour
 
 	public List<District> Districts;
 
-	public void CreateCastle(int mapX, int mapZ)
+	public void CreateCastle(CastleData data)
 	{
+		Debug.Log("Creating Castle to " + data.mapX + "  " + data.mapZ);
+
+		// TODO make castle parameters depend on the terrain features: size, y step size, max y height of a castle tile 
+
+
+		m_data = data;
+
 		CastleMap = new CastleTile[m_castleSize, m_castleSize];
 		// map terrain coordinateds to 2d castlePiecesArray
 		// analyze terrain, put 	
-		SetTileHeight(mapX, mapZ);
+		SetTileHeight(data.coordX, data.coordZ);
 		InstantiateCastleTiles();
 
 
@@ -64,12 +76,7 @@ public class CastleCreator : MonoBehaviour
 		mark as districtset, 
 		put to district instance
 
-		
-
-
 		Now each tile should have district set and each district in Districts should have list of tiles it consists of.
-
-
 
 		*/
 	}
@@ -85,7 +92,7 @@ public class CastleCreator : MonoBehaviour
 	}
 	*/
 
-	public void SetTileHeight(float mapX, int mapZ)
+	public void SetTileHeight(float mapX, float mapZ)
 	{
 		// sample the given area, set the FloorHeight
 		float startX = mapX;
@@ -156,6 +163,14 @@ public class CastleCreator : MonoBehaviour
 			}
 		}
 
+		GameObject aParent = Instantiate(HelperObject, CastleMap[0, 0].position, Quaternion.identity);
+		//aParent.name = CastleMap[0, 0].position.x.ToString() + "_" + CastleMap[0, 0].position.z.ToString();
+
+		aParent.name = "Castle_" + m_data.mapX + "_" + m_data.mapZ;
+
+		// store root object for destroying
+		m_data.rootGameObject = aParent;
+
 		for (int i = 0; i < m_castleSize; i++)
 		{
 			for (int k = 0; k < m_castleSize; k++)
@@ -167,55 +182,54 @@ public class CastleCreator : MonoBehaviour
 					continue;
 
 				GameObject tile;
-
-				tile = Instantiate(Floor, CastleMap[i, k].position, Quaternion.identity);
+				tile = Instantiate(Floor, CastleMap[i, k].position, Quaternion.identity, aParent.transform);
 				tile.name = "Floor_" + i + "_" + k;
 
 				GameObject wallNormal = Wall_Normal_Parts[Random.Range(0, 2)];
 
 
 				if (RightNeighbourType(i, k) == NeighbourType.EmptyAccessable)
-					Instantiate(Wall_High_entrance, CastleMap[i, k].position, Quaternion.Euler(0, 180, 0));
+					Instantiate(Wall_High_entrance, CastleMap[i, k].position, Quaternion.Euler(0, 180, 0), aParent.transform);
 				if (RightNeighbourType(i, k) == NeighbourType.Empty)
 				{					
-					Instantiate(Wall_High_Normal, CastleMap[i, k].position, Quaternion.Euler(0, 180, 0));
+					Instantiate(Wall_High_Normal, CastleMap[i, k].position, Quaternion.Euler(0, 180, 0), aParent.transform);
 				}
 				if (RightNeighbourType(i, k) == NeighbourType.Lower)
 				{
-					Instantiate(wallNormal, CastleMap[i, k].position, Quaternion.Euler(0, 180, 0));
+					Instantiate(wallNormal, CastleMap[i, k].position, Quaternion.Euler(0, 180, 0), aParent.transform);
 				}
 
 				if (LeftNeighbourType(i, k) == NeighbourType.EmptyAccessable)
-					Instantiate(Wall_High_entrance, CastleMap[i, k].position, Quaternion.Euler(0, 0, 0));
+					Instantiate(Wall_High_entrance, CastleMap[i, k].position, Quaternion.Euler(0, 0, 0), aParent.transform);
 				if (LeftNeighbourType(i, k) == NeighbourType.Empty)
 				{
-					Instantiate(Wall_High_Normal, CastleMap[i, k].position, Quaternion.Euler(0, 0, 0));
+					Instantiate(Wall_High_Normal, CastleMap[i, k].position, Quaternion.Euler(0, 0, 0), aParent.transform);
 				}
 				if (LeftNeighbourType(i, k) == NeighbourType.Lower)
 				{
-					Instantiate(wallNormal, CastleMap[i, k].position, Quaternion.Euler(0, 0, 0));
+					Instantiate(wallNormal, CastleMap[i, k].position, Quaternion.Euler(0, 0, 0), aParent.transform);
 				}
 
 				if (TopNeighbourType(i, k) == NeighbourType.EmptyAccessable)
-					Instantiate(Wall_High_entrance, CastleMap[i, k].position, Quaternion.Euler(0, 90, 0));
+					Instantiate(Wall_High_entrance, CastleMap[i, k].position, Quaternion.Euler(0, 90, 0), aParent.transform);
 				if (TopNeighbourType(i, k) == NeighbourType.Empty)
 				{
-					Instantiate(Wall_High_Normal, CastleMap[i, k].position, Quaternion.Euler(0, 90, 0));
+					Instantiate(Wall_High_Normal, CastleMap[i, k].position, Quaternion.Euler(0, 90, 0), aParent.transform);
 				}
 				if (TopNeighbourType(i, k) == NeighbourType.Lower)
 				{
-					Instantiate(wallNormal, CastleMap[i, k].position, Quaternion.Euler(0, 90, 0));
+					Instantiate(wallNormal, CastleMap[i, k].position, Quaternion.Euler(0, 90, 0), aParent.transform);
 				}
 
 				if (BottomNeighbourType(i, k) == NeighbourType.EmptyAccessable)
-					Instantiate(Wall_High_entrance, CastleMap[i, k].position, Quaternion.Euler(0, 270, 0));
+					Instantiate(Wall_High_entrance, CastleMap[i, k].position, Quaternion.Euler(0, 270, 0), aParent.transform);
 				if (BottomNeighbourType(i, k) == NeighbourType.Empty)
 				{
-					Instantiate(Wall_High_Normal, CastleMap[i, k].position, Quaternion.Euler(0, 270, 0));
+					Instantiate(Wall_High_Normal, CastleMap[i, k].position, Quaternion.Euler(0, 270, 0), aParent.transform);
 				}
 				if (BottomNeighbourType(i, k) == NeighbourType.Lower)
 				{
-					Instantiate(wallNormal, CastleMap[i, k].position, Quaternion.Euler(0, 270, 0));
+					Instantiate(wallNormal, CastleMap[i, k].position, Quaternion.Euler(0, 270, 0), aParent.transform);
 				}	
 			}
 		}
@@ -258,7 +272,7 @@ public class CastleCreator : MonoBehaviour
 
 		if (CastleMap[i, k + 1].OkToInstantiate == false)
 		{
-			if (CastleMap[i, k].FloorHeight - CastleMap[i, k + 1].TileCenterHeight < 4)
+			if (CastleMap[i, k].FloorHeight - CastleMap[i, k + 1].TileCenterHeight < maxExitHeightDifference)
 				return NeighbourType.EmptyAccessable;
 			else
 				return NeighbourType.Empty;  // the neighboring tile will not be created, we need wall on this side
@@ -276,7 +290,7 @@ public class CastleCreator : MonoBehaviour
 
 		if (CastleMap[i, k - 1].OkToInstantiate == false)
 		{
-			if (CastleMap[i, k].FloorHeight - CastleMap[i, k - 1].FloorHeight < 10)
+			if (CastleMap[i, k].FloorHeight - CastleMap[i, k - 1].FloorHeight < maxExitHeightDifference)
 				return NeighbourType.EmptyAccessable;  
 			else
 				return NeighbourType.Empty;  // the neighboring tile will not be created, we need wall on this side
@@ -297,7 +311,7 @@ public class CastleCreator : MonoBehaviour
 
 		if (CastleMap[i-1, k].OkToInstantiate == false)
 		{
-			if (CastleMap[i, k].FloorHeight - CastleMap[i-1, k].FloorHeight < 4)
+			if (CastleMap[i, k].FloorHeight - CastleMap[i-1, k].FloorHeight < maxExitHeightDifference)
 				return NeighbourType.EmptyAccessable;
 			else
 				return NeighbourType.Empty;  // the neighboring tile will not be created, we need wall on this side
@@ -316,7 +330,7 @@ public class CastleCreator : MonoBehaviour
 
 		if (CastleMap[i + 1, k].OkToInstantiate == false)
 		{
-			if (CastleMap[i, k].FloorHeight - CastleMap[i + 1, k].FloorHeight < 10)
+			if (CastleMap[i, k].FloorHeight - CastleMap[i + 1, k].FloorHeight < maxExitHeightDifference)
 				return NeighbourType.EmptyAccessable;
 			else
 				return NeighbourType.Empty;  // the neighboring tile will not be created, we need wall on this side
