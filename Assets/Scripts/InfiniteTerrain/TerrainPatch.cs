@@ -33,6 +33,10 @@ public class TerrainPatch : IPatch
 
 	// use landmass aray [1,0,0,1] to turn on noises, but use falloff if the adjacent tiles value (0 or 1 ) is not same.
 
+	private float testMin = 1000f;
+	private float testMax = 0f;
+
+
 
 	private int globalTileX, globalTileZ, h0, h1;
 	private Vector3 pos;
@@ -95,6 +99,7 @@ public class TerrainPatch : IPatch
 				float worldPosX = (x + globalTileX * (InfiniteTerrain.m_heightMapSize - 1)) * ratio;
 				float sum = 0;
 
+				/* // very small hills 
 				if (hillsExist)
 				{
 					//float hills = m_mountainNoise.FractalNoise2D(worldPosX, worldPosZ, 1, 100, 0.02f) + 0.01f; // good small bumpy thing
@@ -105,7 +110,69 @@ public class TerrainPatch : IPatch
 					hills = BlendLandmass(hills, x, z, key, 1);
 					sum += hills;
 				}
+				*/
 
+				// TEST - unnaturally steep transition, otherwise cool
+				/*
+				if (hillsExist)
+				{
+					float hills = -(m_mountainNoiseRidged.FractalNoise2D(worldPosX, worldPosZ, 6, 250, 0.015f)); // flipped small ridge
+					
+					if(hills < testMin ) testMin = hills;
+					if (hills > testMax) testMax = hills;
+
+					// varies somewhere  between -20 and 10 when x 1000
+
+					if (hills*1000 < 0f)
+					{
+						hills = -20f/1000f;
+					}
+					hills = BlendLandmass(hills, x, z, key, 1);
+					sum += hills;
+				}
+				*/
+
+				
+
+				// produces "fjord" like valleys with  plateau tops
+				if (hillsExist)
+				{
+					float hills = m_mountainNoise.FractalNoise2D(worldPosX, worldPosZ, 1, 500, 1);
+					//if (hills < testMin) testMin = hills;
+					//if (hills > testMax) testMax = hills;
+
+					hills = InfiniteTerrain.StaticTestCurve.Evaluate(hills);
+					hills /= 10;
+					hills += 0.01f; // to rse it somewhat above sea level 
+
+					// small bumps
+					float hills2 = -(m_mountainNoiseRidged.FractalNoise2D(worldPosX, worldPosZ, 6, 100, 0.002f)); // flipped small ridge
+					hills += hills2;
+					hills = BlendLandmass(hills, x, z, key, 1);
+
+					sum += hills;
+				}
+
+
+
+				// exiting but unrealistic maze like formation
+				// effect depend on the  animation curve
+				/*
+				if (hillsExist)
+				{
+					float hills = m_mountainNoise.FractalNoise2D(worldPosX, worldPosZ, 1, 100, 1);
+					if (hills < testMin) testMin = hills;
+					if (hills > testMax) testMax = hills;
+
+					hills = InfiniteTerrain.StaticTestCurve.Evaluate(hills);
+
+					hills /= 20;
+					
+					hills = BlendLandmass(hills, x, z, key, 1);
+					
+					sum += hills;
+				}
+				*/
 
 				if (mountainsExist)
 				{
@@ -145,6 +212,8 @@ public class TerrainPatch : IPatch
 
 			}
 		}
+
+		//Debug.Log( testMin + " - " + testMax );
 	}
 
 	// Adjust the given coordinate height value by fading the value towards  neighbouring terrain tiles without same landmasstype
@@ -164,7 +233,7 @@ public class TerrainPatch : IPatch
 
 		int myHeight = HasLandmassType(myKey, typeInt);  // Can be 0 or 1
 
-		// sSplit the terrain to 4 corners, get neighbors for each corners, 
+		// Split the terrain to 4 corners, get neighbors for each corners, 
 
 		if (x < 256 && z < 256)
 		{
@@ -250,7 +319,7 @@ public class TerrainPatch : IPatch
 
 
 // 
-	private int HasLandmassType(string key, int typeInt)
+	public static int HasLandmassType(string key, int typeInt)
 	{
 		int massType = InfiniteTerrain.GetOrAssignLandMassTypes(key);
 		bool is1 = false;

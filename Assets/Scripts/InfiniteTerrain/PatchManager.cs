@@ -2,16 +2,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using System;
 
 public static class PatchManager
 {
     private static int terrainPatchRes = 96;
     private static int splatDetailPatchRes = 32;
     private static int treePatchRes = 8;
+	private static int tempCounter = 0;
 
-    public class TerrainInfo
+	public class TerrainInfo
     {
-		public bool HasHills;
+		public bool HasHills; // temp solution, need betterr way to query landmass types of a terrain
 
 		public Vector3 newPosition;
 		public int globalX;
@@ -29,7 +31,6 @@ public static class PatchManager
 			string key = globalX.ToString() + "_" + globalZ.ToString();
 			landmassTypes = InfiniteTerrain.GetOrAssignLandMassTypes(key);
 			SetParameters();
-
 		}
 
 
@@ -38,8 +39,6 @@ public static class PatchManager
 				if (((landmassTypes & 1) > 0)) // hills
 				HasHills = true;
 		}
-
-
     }
 
     public static Queue<IPatch> patchQueue = new Queue<IPatch>();
@@ -54,32 +53,48 @@ public static class PatchManager
 		
 		//Debug.Log("Adding new terrainInfo to PatchList: globX: " + globX + " globZ: " + globZ);
         patchList.Add(new TerrainInfo(globX, globZ, terrain, pos));
-    }
+
+	}
 
     public static void MakePatches()
     {
-        
-        foreach (TerrainInfo tI in patchList)
+
+		// TODO Calculate here the area that needs to be clear of trees etc, and pass xmin xmax, zmin z max to Patchs
+
+		foreach (TerrainInfo tI in patchList)
         {
             for (int i = 0; i < terrainPatchRes; i++)
-                patchQueue.Enqueue(new TerrainPatch(tI.globalX, tI.globalZ, tI.terrain, 
-				InfiniteTerrain.m_heightMapSize * i / terrainPatchRes, InfiniteTerrain.m_heightMapSize * (i + 1) / terrainPatchRes, tI.newPosition, tI));
+			{
+				patchQueue.Enqueue(new TerrainPatch(tI.globalX, tI.globalZ, tI.terrain,
+					InfiniteTerrain.m_heightMapSize * i / terrainPatchRes, InfiniteTerrain.m_heightMapSize * (i + 1) / terrainPatchRes, tI.newPosition, tI));
+			}
+                
         }
         
         foreach (TerrainInfo tI in patchList)
         {
             for (int i = 0; i < splatDetailPatchRes; i++)
-                patchQueue.Enqueue(new SplatDetailPatch(tI.globalX, tI.globalZ, tI.terrain, 
-				InfiniteTerrain.m_alphaMapSize * i / splatDetailPatchRes, InfiniteTerrain.m_alphaMapSize * (i + 1) / splatDetailPatchRes,tI));
+            {
+				patchQueue.Enqueue(new SplatDetailPatch(tI.globalX, tI.globalZ, tI.terrain,
+					InfiniteTerrain.m_alphaMapSize * i / splatDetailPatchRes, InfiniteTerrain.m_alphaMapSize * (i + 1) / splatDetailPatchRes, tI));
+			}    
         }
-       
-        foreach (TerrainInfo tI in patchList)
-            for (int i = 0; i < treePatchRes; i++)
-                patchQueue.Enqueue(new TreePatch(tI.globalX, tI.globalZ, tI.terrain, 
-				InfiniteTerrain.numOfTreesPerTerrain * i / treePatchRes, InfiniteTerrain.numOfTreesPerTerrain * (i + 1) / treePatchRes, tI));
-       
-        patchList.Clear();
 
-       
+		foreach (TerrainInfo tI in patchList)
+		{
+			// todo reconsider if this shoul be done oin one go for each terrain, not inside foreach loop three times
+			AreaData aData = InfiniteTerrain.GetAreaData(tI.globalX, tI.globalZ);
+			if(aData.castleData != null)
+			{
+				Debug.Log("Castle exists, x: " + aData.castleData.coordX + " " + aData.castleData.coordZ + " size: " + aData.castleData.size);
+			}
+
+			for (int i = 0; i < treePatchRes; i++)
+			{
+				patchQueue.Enqueue(new TreePatch(tI.globalX, tI.globalZ, tI.terrain,
+					InfiniteTerrain.numOfTreesPerTerrain * i / treePatchRes, InfiniteTerrain.numOfTreesPerTerrain * (i + 1) / treePatchRes, tI));
+			}
+		}
+		patchList.Clear();
     }
 }
