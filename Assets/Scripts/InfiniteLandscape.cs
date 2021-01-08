@@ -3,7 +3,7 @@ using System.Collections;
 
 public class InfiniteLandscape : MonoBehaviour
 {
-	public static int RandomSeed = 4;
+	public static int RandomSeed = 5;
 	public GameObject PlayerObject;
 
     public static float waterHeight = 50;

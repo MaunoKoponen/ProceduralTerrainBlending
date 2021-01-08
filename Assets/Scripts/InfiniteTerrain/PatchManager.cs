@@ -82,12 +82,8 @@ public static class PatchManager
 
 		foreach (TerrainInfo tI in patchList)
 		{
-			// todo reconsider if this shoul be done oin one go for each terrain, not inside foreach loop three times
+			// todo reconsider if this shoul be done in one go for each terrain, not inside foreach loop three times
 			AreaData aData = InfiniteTerrain.GetAreaData(tI.globalX, tI.globalZ);
-			if(aData.castleData != null)
-			{
-				Debug.Log("Castle exists, x: " + aData.castleData.coordX + " " + aData.castleData.coordZ + " size: " + aData.castleData.size);
-			}
 
 			for (int i = 0; i < treePatchRes; i++)
 			{

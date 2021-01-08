@@ -3,17 +3,28 @@ using UnityEngine;
 using Debug = UnityEngine.Debug;
 public class DistrictMapper : MonoBehaviour
 {
-    // Two-dimensional array.
-    private static int arraySize = 4;
+	// Two-dimensional array.
+
+	public int heightStepSize = 10;
+	private static int arraySize = 4;
     private float[,] depths = new float[arraySize, arraySize];
     private CityTile[,] m_cityTiles = new CityTile[arraySize, arraySize];
     private List<ADistrict> districts = new List<ADistrict>() ;
     public GameObject prefab;
-    [SerializeField] public List<Color> colors;
-    // Start is called before the first frame update
-    void Start()
-    {
-        // populate depths:
+
+	public GameObject DistrictAccessPrefab;
+
+	[SerializeField] public List<Color> colors;
+	// Start is called before the first frame update
+	void Start()
+	{
+		CreateDistricts();
+	}
+	
+
+	public void CreateDistricts()
+        {
+		// populate depths:
         for (int i = 0; i < arraySize; i++)
         {
             for (int k = 0; k < arraySize; k++)
@@ -22,7 +33,10 @@ public class DistrictMapper : MonoBehaviour
                m_cityTiles[i,k] = new CityTile();
                // 0,10,20.... to height
                m_cityTiles[i,k].height = (Mathf.FloorToInt(height / 10.0f)) *10;
-            }
+
+				m_cityTiles[i, k].worldPosition = new Vector3 (i * 10, m_cityTiles[i, k].height / 10, k * 10);
+
+	}
         }
         // iterate and set up districts
         for (int i = 0; i < arraySize; i++)
@@ -38,11 +52,14 @@ public class DistrictMapper : MonoBehaviour
                         m_cityTiles[i, k].district = newDistrict;
                         newDistrict.name = "District_created_in_" + i + "_" + k;
                         newDistrict.height = m_cityTiles[i, k].height;
-                        districts.Add(newDistrict);
-                        //if (colors.Count < districts.Count)
-                        //{
-                            newDistrict.color = colors[districts.Count];
-                        //}
+
+						newDistrict.districtAccesses = new List<ADistrictAccess>();
+
+						districts.Add(newDistrict);
+                       
+					   
+                            //newDistrict.color = colors[districts.Count];
+                       
                     }
                     // look for visited neighbours by flood fill! with same depth - if found, set to same district
                     // if none found, create a new district
@@ -50,8 +67,31 @@ public class DistrictMapper : MonoBehaviour
                 }
             }
         }
-        // visualization
-        Debug.Log("Passed");
+
+		// Iterate throug tiles and set up district accesses
+
+		for (int y = 0; y < arraySize; y++)
+		{
+			for (int x = 0; x < arraySize; x++)
+			{
+
+				//top
+				FindPossibleDistrictAccess(x, y - 1, m_cityTiles[x, y],0);
+				// left
+				FindPossibleDistrictAccess(x - 1, y, m_cityTiles[x, y],90);
+				// right
+				FindPossibleDistrictAccess(x + 1, y, m_cityTiles[x, y],270);
+				// bottom
+				FindPossibleDistrictAccess(x, y + 1, m_cityTiles[x, y],180);
+
+				// compare height to neighbours
+				// if suitable save possible district access in district
+			}
+		}
+
+		// Visualization
+
+		Debug.Log("Passed");
         for (int i = 0; i < arraySize; i++)
         {
             for (int k = 0; k < arraySize; k++)
@@ -64,49 +104,91 @@ public class DistrictMapper : MonoBehaviour
         foreach (var district in districts)
         {
             Debug.Log("District: " + district.name + "  " + district.height);
-        }
+		}
+
+		foreach (var district in districts)
+		{
+			foreach(var access in district.districtAccesses)
+			{
+				var position = access.myCityTile.worldPosition;
+
+				GameObject visualization = Instantiate(DistrictAccessPrefab, position, Quaternion.identity);
+				visualization.transform.Rotate(0, access.rotation, 0);
+			}
+		}
     }
+
+
 
     private void checkNeighbours(int x,  int y)
     {
         //top
-        FindAndSetSameDistrictNeighbours(x,y - 1,  m_cityTiles[x, y].district);
+        FindAndSetSameDistrictNeighbours(x,y - 1,  m_cityTiles[x, y]);
         // left
-        FindAndSetSameDistrictNeighbours(x-1, y,  m_cityTiles[x, y].district);
+        FindAndSetSameDistrictNeighbours(x-1, y,  m_cityTiles[x, y]);
         // right
-        FindAndSetSameDistrictNeighbours(x+1, y,  m_cityTiles[x, y].district);
+        FindAndSetSameDistrictNeighbours(x+1, y,  m_cityTiles[x, y]);
         // bottom
-        FindAndSetSameDistrictNeighbours(x, y+1,  m_cityTiles[x, y].district);
+        FindAndSetSameDistrictNeighbours(x, y+1,  m_cityTiles[x, y]);
     }
 
-    private void FindAndSetSameDistrictNeighbours(int x, int y, ADistrict currentCheckedDistrict)
+
+	private void FindPossibleDistrictAccess(int x, int y, CityTile currentCheckedTile, int rotation)
+	{
+		var currentCheckedDistrict = currentCheckedTile.district;
+		if (validPosition(x, y))
+		{
+			var tile = m_cityTiles[x, y];
+			{
+				if (tile.height == currentCheckedDistrict.height + heightStepSize)
+				{
+
+					// check if there already is similar access
+					bool alreadyExists = false;
+
+					foreach(var item in currentCheckedDistrict.districtAccesses)
+					{
+						if (item.accessedDistrict == m_cityTiles[x, y].district)
+						{
+							// already exists
+							alreadyExists = true;
+						}
+					}
+
+					if(! alreadyExists)
+					{
+						var access = new ADistrictAccess();
+						access.myDistrict = currentCheckedDistrict;
+						access.accessedDistrict = m_cityTiles[x, y].district;
+						access.myCityTile = currentCheckedTile;
+						access.rotation = rotation;
+						currentCheckedDistrict.districtAccesses.Add(access);
+					}
+				}
+			}
+		}
+	}
+    private void FindAndSetSameDistrictNeighbours(int x, int y, CityTile currentCheckedTile)
     {
-        if (validPosition(x, y))
+		var currentCheckedDistrict = currentCheckedTile.district;
+		if (validPosition(x, y))
         {
             var tile = m_cityTiles[x, y];
             if (!tile.visited)
             {
                 if (tile.height == currentCheckedDistrict.height)
                 {
-                    
 					// Same Height -> same district
-					
 					tile.visited = true;
                     tile.district = currentCheckedDistrict;
                     checkNeighbours(x,y);
                 }
-				else
-				{
-					// Different Height, possible districtAccess
-					// TODO....
-
-					// 
-
-
-				}
-            }
+			}
         }
     }
+
+
+
     private bool validPosition(int x, int y)
     {
         return !(x < 0 || x >= arraySize || y < 0 || y >= arraySize);
@@ -124,10 +206,25 @@ public class CityTile
 
 	public bool valid;
 
+	public Vector3 worldPosition;
+
 }
+
+public class ADistrictAccess
+{
+	public ADistrict accessedDistrict;
+	public ADistrict myDistrict; // Needed?
+
+	public CityTile myCityTile; // Needed?
+
+	public int rotation; // or make n,w,s,e enum 
+
+}
+
 public class ADistrict
 {
     public string name;
     public int height;
     public Color color;
+	public List<ADistrictAccess> districtAccesses;
 }
