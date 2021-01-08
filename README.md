@@ -9,8 +9,10 @@ Each terrain object has random combination of landmass types, and adjacent terra
 
 ![Example image](ScreenShots/example_01.PNG?raw=true "Example image")
 
-Example image above is using https://github.com/Scrawk/Ceto for water:
+Example image above is using https://github.com/Scrawk/Ceto for water.
 
-This is work in progress, so there are some optimizations to be made, and some obvious bugs that need attention.
+This is work in progress, so there are some optimizations to be made, and code is not polished.
 
 Unity version used: 2018.4.6f1
+
+Future Plans: Once Unity has DOTS terrain available, I will test if this can be used with that.  
