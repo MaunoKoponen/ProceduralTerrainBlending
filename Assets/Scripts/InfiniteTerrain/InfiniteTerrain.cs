@@ -20,7 +20,12 @@ public class InfiniteTerrain : InfiniteLandscape
 {
 
 	// for using something else than Unity built-in materia for terrain
+
 	public bool useTestMaterial;
+
+	public static bool UsePresetLandMassesStatic;
+	public bool UsePresetLandMasses;
+
 	public static bool RenderTreesStatic;
 	public bool RenderTrees;
 	public static bool RenderDetailsStatic;
@@ -126,6 +131,8 @@ public class InfiniteTerrain : InfiniteLandscape
     {
 		RenderDetailsStatic = RenderDetails;
 		RenderTreesStatic = RenderTrees;
+		UsePresetLandMassesStatic = UsePresetLandMasses;
+
 		StaticTestCurve = TestCurve;
 		StaticTestCurve2 = TestCurve2;
 
@@ -141,8 +148,88 @@ public class InfiniteTerrain : InfiniteLandscape
 
 		}
 
-        // changed tree types:
-        m_treeProtoTypes = new TreePrototype[numOfTreePrototypes];
+		if(UsePresetLandMassesStatic)
+		{
+			/*Set landmass values of starting area here.
+
+			1:hills
+			2: mountains
+			4: ridged mountains
+			8: plains
+			
+			values ""stack", so 3 would be hills and mountains  
+
+*/
+			int iX = InfiniteLandscape.initialGlobalIndexX;
+			int iZ = InfiniteLandscape.initialGlobalIndexZ;
+
+			SetFixedLandmassValue(iX - 1, iZ - 1, 8);   // there is 3x3 terrains but we preset 5x5 so we can control also
+														// nonvisible adjacent areas  
+			SetFixedLandmassValue(iX + 0, iZ - 1, 8);
+			SetFixedLandmassValue(iX + 1, iZ - 1, 9);
+			SetFixedLandmassValue(iX + 2, iZ - 1, 8);
+			SetFixedLandmassValue(iX + 3, iZ - 1, 8);
+
+			SetFixedLandmassValue(iX - 1, iZ + 0, 8);
+			SetFixedLandmassValue(iX + 0, iZ + 0, 8);
+			SetFixedLandmassValue(iX + 1, iZ + 0, 9);
+			SetFixedLandmassValue(iX + 2, iZ + 0, 8);
+			SetFixedLandmassValue(iX + 3, iZ + 0, 8);
+
+
+			SetFixedLandmassValue(iX - 1, iZ + 1, 12);
+			SetFixedLandmassValue(iX + 0, iZ + 1, 12);
+			SetFixedLandmassValue(iX + 1, iZ + 1, 13); //"Center of the map";
+			SetFixedLandmassValue(iX + 2, iZ + 1, 12);
+			SetFixedLandmassValue(iX + 3, iZ + 1, 12);
+
+
+			SetFixedLandmassValue(iX - 1, iZ + 2, 8);
+			SetFixedLandmassValue(iX + 0, iZ + 2, 8);
+			SetFixedLandmassValue(iX + 1, iZ + 2, 9);
+			SetFixedLandmassValue(iX + 2, iZ + 2, 8);
+			SetFixedLandmassValue(iX + 3, iZ + 2, 8);
+
+
+			SetFixedLandmassValue(iX - 1, iZ + 3, 8);
+			SetFixedLandmassValue(iX + 0, iZ + 3, 8);
+			SetFixedLandmassValue(iX + 1, iZ + 3, 9);
+			SetFixedLandmassValue(iX + 2, iZ + 3, 8);
+			SetFixedLandmassValue(iX + 3, iZ + 3, 8);
+		}
+		
+		// changed tree types:
+		m_treeProtoTypes = new TreePrototype[numOfTreePrototypes];
+
+		m_treeProtoTypes[0] = new TreePrototype();
+		m_treeProtoTypes[0].prefab = m_tree0;
+
+		m_treeProtoTypes[1] = new TreePrototype();
+		m_treeProtoTypes[1].prefab = m_tree1;
+
+		m_treeProtoTypes[2] = new TreePrototype();
+		m_treeProtoTypes[2].prefab = m_tree2;
+
+		m_treeProtoTypes[3] = new TreePrototype();
+		m_treeProtoTypes[3].prefab = m_tree3;
+
+		m_treeProtoTypes[4] = new TreePrototype();
+		m_treeProtoTypes[4].prefab = m_tree4;
+
+		m_treeProtoTypes[5] = new TreePrototype();
+		m_treeProtoTypes[5].prefab = m_tree5;
+
+
+		trees[0] = m_treeProtoTypes[0].prefab as GameObject;
+		trees[1] = m_treeProtoTypes[1].prefab as GameObject;
+		trees[2] = m_treeProtoTypes[2].prefab as GameObject;
+		trees[3] = m_treeProtoTypes[3].prefab as GameObject;
+		trees[4] = m_treeProtoTypes[4].prefab as GameObject;
+
+
+
+		// changed tree types:
+		m_treeProtoTypes = new TreePrototype[numOfTreePrototypes];
 
         m_treeProtoTypes[0] = new TreePrototype();
         m_treeProtoTypes[0].prefab = m_tree0;
@@ -663,6 +750,18 @@ public class InfiniteTerrain : InfiniteLandscape
 			return value;
 
 		}
+	}
+
+
+	// for presetting starting area with fixed values
+	public static void SetFixedLandmassValue(int x, int z, int value) 
+	{
+
+		string name = x.ToString() + "_" + z.ToString();
+
+		var area = new AreaData();
+		area.landMassValue = value;
+		AreaDict.Add(name, area);
 	}
 }
 

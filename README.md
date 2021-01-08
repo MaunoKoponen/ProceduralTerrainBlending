@@ -1,11 +1,12 @@
 ProceduralTerrainBlending
 
-Unity Project, blending different landmass types seamlessly to create believable infinite procedural  terrain.
+Unity Project, blending different landmass types seamlessly to create believable "infinite" procedural  terrain.
 
 Based on https://github.com/sotos82/ProceduralTerrainUnity
 
 Terrain height data is created using 4 different "landmass" noise types: plains, hills, mountains, ridged mountains.
 Each terrain object has random combination of landmass types, and adjacent terrains are blended seamlessly using bell shape sine curve falloff function. 
+
 
 This is work in progress, so there are some optimizations to be made, and some obvious bugs that need attention.
 

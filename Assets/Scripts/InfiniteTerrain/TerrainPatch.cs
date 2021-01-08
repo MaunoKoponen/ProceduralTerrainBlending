@@ -21,18 +21,6 @@ public class TerrainPatch : IPatch
 		pos = pos_i;
 	}
 
-	//Todo
-
-	// set 4 different noises (ridged mountain, round mountain, plains, small hills)
-
-	// set up 16 landmass type  using all combinations of 4 noises on or off
-
-	// set up TerrainPatch Landmadstype, obtained from worldLandmAsses array
-
-	// create falloff (sine) function
-
-	// use landmass aray [1,0,0,1] to turn on noises, but use falloff if the adjacent tiles value (0 or 1 ) is not same.
-
 	private float testMin = 1000f;
 	private float testMax = 0f;
 
@@ -197,7 +185,9 @@ public class TerrainPatch : IPatch
 				if (plainsExist)
 				{
 					float plains = m_mountainNoise.FractalNoise2D(worldPosX, worldPosZ, 4, 9000, 0.1f) + 0.05f; //
-					//plains = 0.2f; // for testing falloff map ignore noise
+					
+					plains = 0.01f; // for testing falloff map ignore noise
+					
 					plains = BlendLandmass(plains, x, z, key, 8);
 					sum += plains;
 				}

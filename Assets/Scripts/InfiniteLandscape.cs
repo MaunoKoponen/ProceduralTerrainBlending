@@ -13,11 +13,13 @@ public class InfiniteLandscape : MonoBehaviour
     // Amount of terrains used: 3 = 3x3:
 	protected const int dim = 3;
 
-	// needs to divisable by 3 TODO fix this so that value can be any integer
-	public static int initialGlobalIndexX = 12;
 
-	// needs to divisable by 3
-	public static int initialGlobalIndexZ = 999;
+	//  Following 2 values determine the starting position of player in world
+	// Unit here is "terrain", not meters or such
+
+	// Values need to divisable by 3 -  TODO fix this so that value can be any integer
+	public static int initialGlobalIndexX = 333; //12;
+	public static int initialGlobalIndexZ = 333; //999;
 
 	protected bool patchIsFilling = false;
     protected int prevGlobalIndexX = -1;
