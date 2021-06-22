@@ -14,6 +14,8 @@ Example image above is using https://github.com/Scrawk/Ceto for water.
 
 Unity version used: 2018.4.6f1
 
+NOTE: there is new version of this project, updaed to Unity 2020: https://github.com/MaunoKoponen/ProceduralTerrainBlending_2020
+
 Disclaimer:
 This is a work in progress hobby project, so there are some optimizations to be made, and code is not polished.
 
